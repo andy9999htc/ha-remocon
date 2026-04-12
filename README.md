@@ -4,6 +4,8 @@
 
 [![HACS Default](https://img.shields.io/badge/HACS-Default-orange.svg)](https://hacs.xyz/)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=macschlingel&repository=ha-remocon&category=integration)
+
 Steuerung und Überwachung von Elco Wärmepumpen (z.B. Aerotop SPK) über die Remocon-Net Cloud API — direkt in Home Assistant, ohne Umweg über MQTT oder AppDaemon.
 
 > **Hinweis:** Dies ist ein inoffizielles Community-Projekt. Es wird weder von Elco noch von der Ariston Thermo Group unterstützt oder autorisiert.
