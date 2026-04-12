@@ -1,0 +1,15 @@
+{
+  "email": "your_email@example.com",
+  "password": "your_password",
+  "gateway_id": "FFEEBBAA0011",
+  "zone_id": "1",
+  "base_url": "https://www.remocon-net.remotethermo.com",
+  "mqtt_enabled": false,
+  "mqtt_host": "192.168.1.100",
+  "mqtt_port": 1883,
+  "mqtt_username": null,
+  "mqtt_password": null,
+  "mqtt_topic_prefix": "remocon/heating",
+  "mqtt_qos": 0,
+  "mqtt_retain": true
+}

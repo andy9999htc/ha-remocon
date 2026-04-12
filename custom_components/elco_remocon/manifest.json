@@ -1,0 +1,11 @@
+{
+  "domain": "elco_remocon",
+  "name": "Remocon-Net (unofficial)",
+  "codeowners": ["@bastian"],
+  "config_flow": true,
+  "documentation": "https://github.com/bastian/ha-remocon",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/bastian/ha-remocon/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Remocon-Net (inoffiziell)",
+        "description": "Inoffizielle Integration — verbinde deine Elco Wärmepumpe über die Remocon-Net Cloud.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort",
+          "gateway_id": "Gateway ID",
+          "zone": "Zone"
+        }
+      }
+    },
+    "error": {
+      "auth": "Login fehlgeschlagen. E-Mail oder Passwort falsch.",
+      "connection": "Verbindung zur Remocon-Net Cloud fehlgeschlagen.",
+      "no_data": "Keine Daten von der Anlage erhalten. Gateway ID korrekt?"
+    }
+  }
+}
