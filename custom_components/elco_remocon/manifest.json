@@ -8,5 +8,5 @@
   "issue_tracker": "https://github.com/bastian/ha-remocon/issues",
   "requirements": [],
   "version": "0.1.0",
-  "icon": "https://github.com/macschlingel/ha-remocon/raw/main/logo.jpg"
+  "icon": "icon.png"
 }
