@@ -3,10 +3,9 @@
   "name": "Remocon-Net (unofficial)",
   "codeowners": ["@bastian"],
   "config_flow": true,
-  "documentation": "https://github.com/bastian/ha-remocon",
+  "documentation": "https://github.com/macschlingel/ha-remocon",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/bastian/ha-remocon/issues",
+  "issue_tracker": "https://github.com/macschlingel/ha-remocon/issues",
   "requirements": [],
-  "version": "0.1.0",
-  "icon": "mdi:heat-pump"
+  "version": "0.1.0"
 }
