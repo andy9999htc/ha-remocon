@@ -1,0 +1,7 @@
+{
+  "name": "Remocon-Net (unofficial)",
+  "content_in_root": false,
+  "country": ["DE", "AT", "CH"],
+  "homeassistant": "2024.1.0",
+  "hacs_minimum": "1.0.0"
+}
