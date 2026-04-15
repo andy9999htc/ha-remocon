@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Remocon-Net (unofficial)",
+        "description": "Unofficial integration — connect your Elco heat pump via the Remocon-Net Cloud.",
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "gateway_id": "Gateway ID",
+          "zone": "Zone"
+        }
+      }
+    },
+    "error": {
+      "auth": "Login failed. Email or password incorrect.",
+      "connection": "Connection to the Remocon-Net Cloud failed.",
+      "no_data": "No data received from the system. Is the Gateway ID correct?"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "outside_temperature": {
+        "name": "Outside Temperature"
+      },
+      "desired_temperature": {
+        "name": "Desired Temperature"
+      },
+      "reduced_temperature": {
+        "name": "Reduced Temperature"
+      },
+      "flow_temperature": {
+        "name": "Flow Temperature"
+      },
+      "system_pressure": {
+        "name": "System Pressure"
+      },
+      "dhw_temperature": {
+        "name": "DHW Temperature"
+      }
+    }
+  }
+}
