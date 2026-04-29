@@ -17,5 +17,27 @@
       "connection": "Verbindung zur Remocon-Net Cloud fehlgeschlagen.",
       "no_data": "Keine Daten von der Anlage erhalten. Gateway ID korrekt?"
     }
+  },
+  "entity": {
+    "sensor": {
+      "outside_temperature": {
+        "name": "Außentemperatur"
+      },
+      "desired_temperature": {
+        "name": "Solltemperatur"
+      },
+      "reduced_temperature": {
+        "name": "Absenktemperatur"
+      },
+      "flow_temperature": {
+        "name": "Vorlauftemperatur"
+      },
+      "system_pressure": {
+        "name": "Anlagendruck"
+      },
+      "dhw_temperature": {
+        "name": "Warmwassertemperatur"
+      }
+    }
   }
 }
