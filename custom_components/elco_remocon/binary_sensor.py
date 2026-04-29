@@ -5,7 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,7 +21,7 @@ from .coordinator import ElcoRemoconCoordinator
 
 
 @dataclass(kw_only=True)
-class ElcoBinarySensorDescription:
+class ElcoBinarySensorDescription(BinarySensorEntityDescription):
     """Describe an Elco binary sensor entity."""
 
     key: str
