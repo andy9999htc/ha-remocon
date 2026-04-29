@@ -39,12 +39,17 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(client.login)
                 # Verify we can actually get data
                 await self.hass.async_add_executor_job(client.get_data)
-            except RemoconAuthError:
+            except RemoconAuthError as err:
+                _LOGGER.error("Authentication error during setup: %s", err)
                 errors["base"] = "auth"
-            except RemoconConnectionError:
+            except RemoconConnectionError as err:
+                _LOGGER.error("Connection error during setup: %s", err)
                 errors["base"] = "connection"
-            except (RemoconDataError, Exception) as err:
-                _LOGGER.warning("Unexpected error during setup: %s", err)
+            except RemoconDataError as err:
+                _LOGGER.error("Data error during setup: %s", err)
+                errors["base"] = "no_data"
+            except Exception as err:
+                _LOGGER.exception("Unexpected exception during setup: %s", err)
                 errors["base"] = "no_data"
             else:
                 await self.async_set_unique_id(user_input[CONF_GATEWAY_ID])

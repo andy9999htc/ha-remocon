@@ -145,12 +145,21 @@ class RemoconClient:
         kwargs.setdefault("timeout", 15)
         try:
             resp = s.request(method, url, **kwargs)
+            if resp.status_code in (401, 403):
+                raise RemoconAuthError("Session expired")
+            resp.raise_for_status()
         except requests.RequestException as err:
-            raise RemoconConnectionError(str(err)) from err
-        if resp.status_code in (401, 403):
-            raise RemoconAuthError("Session expired")
-        resp.raise_for_status()
-        return resp.json()
+            err_msg = str(err)
+            if getattr(err, "response", None) is not None:
+                err_msg += f" - Response: {err.response.text}"
+            _LOGGER.error("API Request failed: %s", err_msg)
+            raise RemoconConnectionError(err_msg) from err
+        
+        try:
+            return resp.json()
+        except ValueError as err:
+            _LOGGER.error("Invalid JSON response from API: %s", resp.text)
+            raise RemoconDataError("Could not parse API response") from err
 
     def _get_raw(self) -> dict:
         path = f"/R2/PlantHomeBsb/GetData/{self._gateway_id}"
@@ -160,7 +169,12 @@ class RemoconClient:
             "filter": {"progIds": "null", "plant": True, "zone": True},
         }
         data = self._request("POST", path, json=payload)
-        return data.get("data", data)
+        if not data:
+            raise RemoconDataError("Empty data received from API")
+        if isinstance(data, dict) and not data.get("ok", True):
+            _LOGGER.error("API returned error: %s", data)
+            raise RemoconDataError(data.get("message", "API returned error"))
+        return data.get("data", data) if isinstance(data, dict) else data
 
     def _get_system_items(self, item_ids: list[dict]) -> dict[str, Any]:
         path = f"/api/v2/remote/dataItems/{self._gateway_id}/get?umsys=si"
@@ -171,13 +185,16 @@ class RemoconClient:
             "culture": "de",
         }
         data = self._request("POST", path, json=payload)
-        return {item["id"]: item.get("value") for item in data.get("items", [])}
+        return {item["id"]: item.get("value") for item in data.get("items", [])} if isinstance(data, dict) else {}
 
     def get_data(self) -> RemoconData:
         """Fetch all data and return a RemoconData object."""
         raw = self._get_raw()
-        plant = raw.get("plantData", {})
-        zone = raw.get("zoneData", {})
+        if not isinstance(raw, dict):
+            raise RemoconDataError(f"Unexpected data format from API: {type(raw)}")
+            
+        plant = raw.get("plantData") or {}
+        zone = raw.get("zoneData") or {}
 
         sys_items: dict[str, Any] = {}
         try:
@@ -185,15 +202,19 @@ class RemoconClient:
                 {"id": "HeatingCircuitPressure", "zn": 0},
                 {"id": "ChFlowTemp", "zn": 0},
             ])
-        except Exception:
-            _LOGGER.debug("Could not fetch system items from v2 API")
+        except Exception as err:
+            _LOGGER.debug("Could not fetch system items from v2 API: %s", err)
 
-        ch_comfort = zone.get("chComfortTemp", {})
-        ch_reduced = zone.get("chReducedTemp", {})
-        mode_info = zone.get("mode", {})
+        ch_comfort = zone.get("chComfortTemp") or {}
+        ch_reduced = zone.get("chReducedTemp") or {}
+        mode_info = zone.get("mode") or {}
 
         pressure = sys_items.get("HeatingCircuitPressure")
         flow = sys_items.get("ChFlowTemp")
+
+        dhw_comfort = plant.get("dhwComfortTemp") or {}
+        dhw_reduced = plant.get("dhwReducedTemp") or {}
+        dhw_mode_info = plant.get("dhwMode") or {}
 
         return RemoconData(
             comfort_temp=float(ch_comfort.get("value", 0)),
@@ -210,9 +231,9 @@ class RemoconClient:
             heat_or_cool_request=bool(zone.get("heatOrCoolRequest", 0)),
             outside_temp=float(plant.get("outsideTemp", 0)),
             dhw_temp=float(plant.get("dhwStorageTemp", 0)),
-            dhw_comfort_temp=float(plant.get("dhwComfortTemp", {}).get("value", 0)),
-            dhw_reduced_temp=float(plant.get("dhwReducedTemp", {}).get("value", 0)),
-            dhw_mode=plant.get("dhwMode", {}).get("value", 0),
+            dhw_comfort_temp=float(dhw_comfort.get("value", 0)),
+            dhw_reduced_temp=float(dhw_reduced.get("value", 0)),
+            dhw_mode=dhw_mode_info.get("value", 0),
             dhw_enabled=bool(plant.get("dhwEnabled", 0)),
             heat_pump_on=bool(plant.get("heatPumpOn", 0)),
             flame_sensor=bool(plant.get("flameSensor", 0)),
@@ -226,9 +247,13 @@ class RemoconClient:
     ) -> None:
         """Set comfort and/or reduced temperature."""
         raw = self._get_raw()
-        zone = raw.get("zoneData", {})
-        old_comf = float(zone.get("chComfortTemp", {}).get("value", 0))
-        old_econ = float(zone.get("chReducedTemp", {}).get("value", 0))
+        if not isinstance(raw, dict):
+            raw = {}
+        zone = raw.get("zoneData") or {}
+        ch_comf = zone.get("chComfortTemp") or {}
+        ch_red = zone.get("chReducedTemp") or {}
+        old_comf = float(ch_comf.get("value", 0))
+        old_econ = float(ch_red.get("value", 0))
 
         new_comf = comfort if comfort is not None else old_comf
         new_econ = reduced if reduced is not None else old_econ
@@ -245,7 +270,11 @@ class RemoconClient:
     def set_zone_mode(self, mode: int) -> None:
         """Set zone operation mode."""
         raw = self._get_raw()
-        old_mode = raw.get("zoneData", {}).get("mode", {}).get("value", MODE_AUTOMATIC)
+        if not isinstance(raw, dict):
+            raw = {}
+        zone = raw.get("zoneData") or {}
+        mode_info = zone.get("mode") or {}
+        old_mode = mode_info.get("value", MODE_AUTOMATIC)
 
         path = (
             f"/api/v2/remote/bsbZones/{self._gateway_id}"
@@ -258,9 +287,13 @@ class RemoconClient:
     ) -> None:
         """Set DHW temperatures."""
         raw = self._get_raw()
-        plant = raw.get("plantData", {})
-        old_comf = float(plant.get("dhwComfortTemp", {}).get("value", 0))
-        old_econ = float(plant.get("dhwReducedTemp", {}).get("value", 0))
+        if not isinstance(raw, dict):
+            raw = {}
+        plant = raw.get("plantData") or {}
+        dhw_comf = plant.get("dhwComfortTemp") or {}
+        dhw_red = plant.get("dhwReducedTemp") or {}
+        old_comf = float(dhw_comf.get("value", 0))
+        old_econ = float(dhw_red.get("value", 0))
 
         new_comf = comfort if comfort is not None else old_comf
         new_econ = reduced if reduced is not None else old_econ
