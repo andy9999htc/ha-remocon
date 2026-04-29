@@ -166,7 +166,7 @@ class RemoconClient:
         payload = {
             "useCache": True,
             "zone": int(self._zone),
-            "filter": {"progIds": "null", "plant": True, "zone": True},
+            "filter": {"progIds": None, "plant": True, "zone": True},
         }
         data = self._request("POST", path, json=payload)
         if not data:
