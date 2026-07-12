@@ -1,0 +1,214 @@
+Internals:
+   BUSY       0
+   DEF        https://www.remocon-net.remotethermo.com/R2/Account/Login 300
+   FUUID      5ec7c74b-f33f-5826-36d3-3fd388d4b9caf794
+   Interval   300
+   LASTSEND   1783801720.45443
+   MainURL    https://www.remocon-net.remotethermo.com/R2/Account/Login
+   ModuleVersion 3.5.21 - 27.12.2019
+   NAME       elco
+   NOTIFYDEV  global
+   NR         187
+   NTFY_ORDER 50-elco
+   ReplacementEnabled 1
+   STATE      ???
+   TRIGGERTIME 1783802020.04288
+   TRIGGERTIME_FMT 2026-07-11 22:33:40
+   TYPE       HTTPMOD
+   addr       https://www.remocon-net.remotethermo.com:443
+   auth       0
+   buf        
+   code       200
+   compress   1
+   conn       
+   data       {"features":{"zones":[{"num":1,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":1,"thermoregModeHeat":3,"thermoregModeCool":1,"undef":false},"isHidden":false},{"num":2,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true},{"num":3,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true}],"solar":false,"convBoiler":false,"hpSys":true,"hybridSys":false,"cascadeSys":false,"dhwProgSupported":true,"virtualZones":true,"hasVmc":false,"extendedTimeProg":false,"hasBoiler":false,"commBoiler":false,"pilotSupported":false,"isVmcR2":false,"isEvo2":false,"dhwHidden":false,"dhwBoilerPresent":true,"dhwModeChangeable":true,"hvInputOff":false,"autoThermoReg":true,"hasMetering":true,"weatherProvider":0,"hasFireplace":false,"hasSlp":false,"hasEm20":false,"hasTwoCoolingTemp":false,"bmsActive":false,"hpCascadeSys":false,"hpCascadeConfig":-1,"bufferTimeProgAvailable":false,"distinctHeatCoolSetpoints":false,"hasZoneNames":false,"hasGahp":false,"hydraulicScheme":5,"preHeatingSupported":false,"zigbeeActive":false},"useCache":true,"zone":1,"filter":{"notEssentials":true,"progId":null,"plant":true,"zone":true,"dhw":true}}
+   displayurl https://www.remocon-net.remotethermo.com/R2/PlantHome/GetData/F0AD4E088C79?umsys=si
+   errno      101
+   header     Cookie: .AspNet.ApplicationCookie=D13Od1E64rr7uAPYKACIntXp2fEFobBC7Z0m-zoHJo7ugRC70hpqwd0xwQUwvc4LcK1F_1Fw7WDBLW17SK_tfY0eS0zJizFBewXn9yiVY3mvhFo_W3TzIMzynGwWBZ3t1YvlsrlYo4OUbSEXamkSNlg0XHCHmwkIEco0HwZNiNNlC7j4QaN7dDTZG_L_ke8KWlgxJiWzcXNaeGxixEnymItH5PYHqe72Gf8lGCCsjR4GcmhRgn5m2LnolBJ7g4vtKr2cBhm2_n7RYAXO3-6eXWJi48kjHhz7vLD6IEPdFwOvmgmVJzV7W0MFSAh1y_0MDRynV24Zb951PNNIItaeek9aVsG7aI__tchE1KBvFncUK_J2MLI3zcdoyp5x1VfTgezTHFUPnPpWhaM-HQoUREhfX4mKn_vg7dCFkKlkJKzdXc5HvNp5pe1hxhaSMFBmc1AmNbO6KZhoE7sEhYjtKbufabO6KJnujZrlzk5vd12_3HqswJdT-Dej0r8_EY14xC4riRz8RLrYp-790jG_jCFpsYTm2jxOH4fjRgh5qURvCemCfNQRy0k6LAEV25LdkQIOQI3BAAcOqd-8OryAomWVSz9cLEJxrtxc-dhtQzWimpJN; ar.loggedUser=eyJmbmFtZSI6IkFuZHJlYXMiLCJsbmFtZSI6IlVobCIsInJvbGUiOiJGaW5hbFVzZXIiLCJwcm9maWxlcyI6MCwiYXJlYSI6bnVsbCwiY291bnRyeSI6bnVsbCwidmVyIjoxLCJ0cyI6MTc4MzgwMTcyMDM1MX0=; expires=Tue; path=/
+   host       www.remocon-net.remotethermo.com
+   httpbody   {"data":{"features":null,"timeProg":null,"items":[{"id":"ChFlowSetpointTemp","zone":0,"kind":1,"min":-3277.0,"max":3276.0,"step":1.0,"value":25.0,"decimals":0,"options":null,"optTexts":null,"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"PlantMode","zone":0,"kind":2,"min":0.0,"max":0.0,"step":0.0,"value":0.0,"decimals":0,"options":[0,1,2,3,5],"optTexts":["Summer","Winter","Heating only","Cooling","OFF"],"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"AutomaticThermoregulation","zone":0,"kind":3,"min":0.0,"max":0.0,"step":0.0,"value":1.0,"decimals":0,"options":[0,1],"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"OutsideTemp","zone":0,"kind":1,"min":-3277.0,"max":3276.0,"step":1.0,"value":23.0,"decimals":0,"options":null,"optTexts":null,"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"DhwMode","zone":0,"kind":2,"min":0.0,"max":0.0,"step":0.0,"value":1.0,"decimals":0,"options":[0,1,2,3,4,5],"optTexts":["Disabled","Time Based","Always active","HC - HP","HC - HP 40","Green Mode"],"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"DhwTemp","zone":0,"kind":1,"min":35.0,"max":65.0,"step":1.0,"value":40.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"DhwStorageTemperature","zone":0,"kind":1,"min":-3277.0,"max":3276.0,"step":1.0,"value":76.0,"decimals":0,"options":null,"optTexts":null,"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"DhwTimeProgComfortTemp","zone":0,"kind":1,"min":35.0,"max":65.0,"step":1.0,"value":40.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"DhwTimeProgEconomyTemp","zone":0,"kind":1,"min":35.0,"max":40.0,"step":1.0,"value":40.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"ZoneMode","zone":1,"kind":2,"min":0.0,"max":0.0,"step":0.0,"value":2.0,"decimals":0,"options":[2,3],"optTexts":["Manual","Time program"],"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"ZoneDesiredTemp","zone":1,"kind":1,"min":-3276.8,"max":3276.7,"step":0.5,"value":19.0,"decimals":1,"options":null,"optTexts":null,"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"VirtTempSetpointCool","zone":1,"kind":1,"min":18.0,"max":23.0,"step":1.0,"value":20.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"VirtTempSetpointHeat","zone":1,"kind":1,"min":25.0,"max":52.0,"step":1.0,"value":30.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"VirtTempOffsetCool","zone":1,"kind":1,"min":-2.5,"max":2.5,"step":0.5,"value":0.0,"decimals":1,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":""},{"id":"VirtTempOffsetHeat","zone":1,"kind":1,"min":-14.0,"max":14.0,"step":1.0,"value":0.0,"decimals":0,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":""},{"id":"VirtComfortTemp","zone":1,"kind":1,"min":10.0,"max":30.0,"step":0.5,"value":19.0,"decimals":1,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"VirtReducedTemp","zone":1,"kind":1,"min":10.0,"max":30.0,"step":0.5,"value":18.0,"decimals":1,"options":null,"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":"°C"},{"id":"ZoneHeatRequest","zone":1,"kind":2,"min":0.0,"max":0.0,"step":0.0,"value":0.0,"decimals":0,"options":[0,1],"optTexts":["OFF","ON"],"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"IsHeatingPumpOn","zone":0,"kind":3,"min":0.0,"max":0.0,"step":0.0,"value":0.0,"decimals":0,"options":[0,1],"optTexts":null,"readOnly":true,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"IsQuite","zone":0,"kind":3,"min":0.0,"max":0.0,"step":0.0,"value":1.0,"decimals":0,"options":[0,1],"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null},{"id":"Holiday","zone":0,"kind":3,"min":0.0,"max":0.0,"step":0.0,"value":0.0,"decimals":0,"options":[0,1],"optTexts":null,"readOnly":false,"error":false,"invalid":false,"expiresOn":null,"unit":null}],"hasAdvancedSettings":true,"hasDhw":true},"ok":true,"redirectUrl":null,"message":null,"messageTitle":null,"debugMessage":null,"resultCode":null}
+   httpheader HTTP/1.1 200 OK
+Date: Sat, 11 Jul 2026 20:28:44 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 4749
+Connection: close
+Cache-Control: private, s-maxage=0
+Set-Cookie: ar.tmpAuthToken=; expires=Tue, 07-Jul-2026 20:28:40 GMT; path=/; HttpOnly; SameSite=lax
+Set-Cookie: __controllerTempData=; expires=Tue, 07-Jul-2026 20:28:44 GMT; path=/; HttpOnly; SameSite=lax
+X-Frame-Options: Sameorigin
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: no-referrer
+Expect-CT: enforce, max-age=86400
+Strict-Transport-Security: max-age=31536000
+Content-Security-Policy: worker-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+   httpversion 1.0
+   hu_blocking 0
+   hu_filecount 471
+   hu_port    443
+   hu_portSfx 
+   ignoreredirects 1
+   loglevel   4
+   path       /R2/PlantHome/GetData/F0AD4E088C79?umsys=si
+   protocol   https
+   redirects  0
+   timeout    10
+   url        https://www.remocon-net.remotethermo.com/R2/PlantHome/GetData/F0AD4E088C79?umsys=si
+   value      0
+   CompiledRegexes:
+   HTTPCookieHash:
+     ar.loggedUser;/:
+       Name       ar.loggedUser
+       Options    expires=Sun, 11-Jul-2027 20:28:40 GMT; path=/; secure; HttpOnly; SameSite=lax
+       Path       /
+       Value      eyJmbmFtZSI6IkFuZHJlYXMiLCJsbmFtZSI6IlVobCIsInJvbGUiOiJGaW5hbFVzZXIiLCJwcm9maWxlcyI6MCwiYXJlYSI6bnVsbCwiY291bnRyeSI6bnVsbCwidmVyIjoxLCJ0cyI6MTc4MzgwMTcyMDM1MX0=
+     expires;/:
+       Name       expires
+       Options    07-Jul-2026 20:28:44 GMT; path=/; HttpOnly; SameSite=lax
+       Path       /
+       Value      Tue
+     path;:
+       Name       path
+       Options    expires=Thu, 01-Jan-1970 00:00:00 GMT; HttpOnly; SameSite=lax
+       Path       
+       Value      /
+   Helper:
+     DBLOG:
+       Aussentemperatur:
+         logdb:
+           TIME       1783801724.79863
+           VALUE      23.0
+       LAST_ERROR:
+         logdb:
+           TIME       1783732729.87491
+           VALUE      read from https://www.remocon-net.remotethermo.com:443 timed out
+       WaermepumpeAn:
+         logdb:
+           TIME       1783801724.79863
+           VALUE      0
+       WaermepumpeMode:
+         logdb:
+           TIME       1783801724.79863
+           VALUE      0
+       Warmwassertemperatur:
+         logdb:
+           TIME       1783801724.79863
+           VALUE      76.0
+       state:
+         logdb:
+           TIME       1783796400.0416
+           VALUE      UpdateElcoState 0
+   QUEUE:
+   READINGS:
+     2026-07-11 22:28:44   Aussentemperatur 23.0
+     2021-03-18 09:09:08   Außentemperatur 1.0
+     2020-05-24 16:08:25   Außentemperatur-1 15.0
+     2020-05-24 16:08:25   Außentemperatur-2 56.0
+     2026-07-11 03:18:49   LAST_ERROR      read from https://www.remocon-net.remotethermo.com:443 timed out
+     2022-04-12 09:54:30   SerialNumber    0219216V2076
+     2024-03-14 00:01:13   UpdatePVTempUp  12.0
+     2026-07-11 22:28:44   WaermepumpeAn   0
+     2026-07-11 22:28:44   WaermepumpeMode 0
+     2026-07-11 22:28:44   Warmwassertemperatur 76.0
+     2021-03-16 17:13:18   allData-1       1
+     2021-03-16 17:13:18   allData-2       4.0
+     2021-03-16 17:13:18   allData-3       44.0
+     2021-03-16 17:13:18   allData-4       false
+     2020-05-24 16:49:23   test1           1
+     2020-05-24 15:56:56   test2           15.0
+   REQUEST:
+     data       {"features":{"zones":[{"num":1,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":1,"thermoregModeHeat":3,"thermoregModeCool":1,"undef":false},"isHidden":false},{"num":2,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true},{"num":3,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true}],"solar":false,"convBoiler":false,"hpSys":true,"hybridSys":false,"cascadeSys":false,"dhwProgSupported":true,"virtualZones":true,"hasVmc":false,"extendedTimeProg":false,"hasBoiler":false,"commBoiler":false,"pilotSupported":false,"isVmcR2":false,"isEvo2":false,"dhwHidden":false,"dhwBoilerPresent":true,"dhwModeChangeable":true,"hvInputOff":false,"autoThermoReg":true,"hasMetering":true,"weatherProvider":0,"hasFireplace":false,"hasSlp":false,"hasEm20":false,"hasTwoCoolingTemp":false,"bmsActive":false,"hpCascadeSys":false,"hpCascadeConfig":-1,"bufferTimeProgAvailable":false,"distinctHeatCoolSetpoints":false,"hasZoneNames":false,"hasGahp":false,"hydraulicScheme":5,"preHeatingSupported":false,"zigbeeActive":false},"useCache":true,"zone":1,"filter":{"notEssentials":true,"progId":null,"plant":true,"zone":true,"dhw":true}}
+     header     
+     ignoreredirects 0
+     retryCount 0
+     type       get02
+     url        https://www.remocon-net.remotethermo.com/R2/PlantHome/GetData/%%ANLAGE%%?umsys=si
+     value      0
+   defptr:
+     readingBase:
+       Aussentemperatur get
+       WaermepumpeAn get
+       WaermepumpeMode get
+       Warmwassertemperatur get
+     readingNum:
+       Aussentemperatur 02
+       WaermepumpeAn 02
+       WaermepumpeMode 02
+       Warmwassertemperatur 02
+     readingOutdated:
+     requestReadings:
+       get02:
+         Aussentemperatur get 02-2
+         WaermepumpeAn get 02-4
+         WaermepumpeMode get 02-1
+         Warmwassertemperatur get 02-3
+   lastpoll:
+     allData    1783801720.04284
+   sslargs:
+Attributes:
+   disable    0
+   enableCookies 1
+   get01Data  [{"id":"U6_15_1","newValue":$val,"oldValue":11}]
+   get01Header01 content-type: application/json; charset=UTF-8
+   get01Header02 X-Requested-With: XMLHttpRequest
+   get01Name  UpdatePVTempUp
+   get01Regex .*?value":(\d*.\d*)
+   get01URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Refresh?id=%%ANLAGE%%&paramIds=U6_15_1
+   get02-1Name WaermepumpeMode
+   get02-2Name Aussentemperatur
+   get02-3Name Warmwassertemperatur
+   get02-4Name WaermepumpeAn
+   get02Data  {"features":{"zones":[{"num":1,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":1,"thermoregModeHeat":3,"thermoregModeCool":1,"undef":false},"isHidden":false},{"num":2,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true},{"num":3,"name":"","roomSens":false,"geofenceDeroga":false,"virtInfo":{"heatReqMode":0,"thermoregModeHeat":1,"thermoregModeCool":0,"undef":false},"isHidden":true}],"solar":false,"convBoiler":false,"hpSys":true,"hybridSys":false,"cascadeSys":false,"dhwProgSupported":true,"virtualZones":true,"hasVmc":false,"extendedTimeProg":false,"hasBoiler":false,"commBoiler":false,"pilotSupported":false,"isVmcR2":false,"isEvo2":false,"dhwHidden":false,"dhwBoilerPresent":true,"dhwModeChangeable":true,"hvInputOff":false,"autoThermoReg":true,"hasMetering":true,"weatherProvider":0,"hasFireplace":false,"hasSlp":false,"hasEm20":false,"hasTwoCoolingTemp":false,"bmsActive":false,"hpCascadeSys":false,"hpCascadeConfig":-1,"bufferTimeProgAvailable":false,"distinctHeatCoolSetpoints":false,"hasZoneNames":false,"hasGahp":false,"hydraulicScheme":5,"preHeatingSupported":false,"zigbeeActive":false},"useCache":true,"zone":1,"filter":{"notEssentials":true,"progId":null,"plant":true,"zone":true,"dhw":true}}
+   get02Name  allData
+   get02Poll  1
+   get02Regex PlantMode",.*?value":(\d*).*OutsideTemp",.*?value":(\d*.\d*).*DhwStorageTemperature",.*?value":(\d*.\d*).*IsHeatingPumpOn",.*?value":(\d*)
+   get02URL   https://www.remocon-net.remotethermo.com/R2/PlantHome/GetData/%%ANLAGE%%?umsys=si
+   handleRedirects 1
+   reading01Name SerialNumber
+   reading01Regex .*GW serial:.*span.*\S*\s*.*<span>(\d+.+\d+).*
+   replacement01Mode expression
+   replacement01Regex %%USER%%
+   replacement01Value {ReadingsVal("ElcoCloudZugang","Benutzer","")}
+   replacement02Mode expression
+   replacement02Regex %%PASSWORD%%
+   replacement02Value {ReadingsVal("ElcoCloudZugang","Passwort","")}
+   replacement03Mode expression
+   replacement03Regex %%ANLAGE%%
+   replacement03Value {ReadingsVal("ElcoCloudZugang","Anlage","")}
+   requestData {"email":"%%USER%%","password":"%%PASSWORD%%","rememberMe":false}
+   requestHeader01 content-type: application/json
+   room       Elco
+   set01Data  [{"id":"U6_15_1","value":$val,"prevValue":30}]
+   set01Header01 content-type: application/json; charset=UTF-8
+   set01Header02 X-Requested-With: XMLHttpRequest
+   set01Name  UpdatePVTempUp
+   set01Regex ([0-9]+)
+   set01URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Submit/%%ANLAGE%%
+   set02Data  [{"id":"U6_3_1_0_0","value":$val,"prevValue":0}]
+   set02Header01 content-type: application/json; charset=UTF-8
+   set02Header02 X-Requested-With: XMLHttpRequest
+   set02Name  UpdateCHTempComfort
+   set02Regex ([0-9]+)
+   set02URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Submit/%%ANLAGE%%
+   set03Data  [{"id":"U3","value":$val,"prevValue":6}]
+   set03Header01 content-type: application/json; charset=UTF-8
+   set03Header02 X-Requested-With: XMLHttpRequest
+   set03Name  UpdateElcoState
+   set03Regex ([0-9]+)
+   set03URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Submit/%%ANLAGE%%
+   set04Data  [{"id":"U6_9_1_0_0","value":$val,"prevValue":30}]
+   set04Header01 content-type: application/json; charset=UTF-8
+   set04Header02 X-Requested-With: XMLHttpRequest
+   set04Name  UpdateDHWTempComfort
+   set04Regex ([0-9]+)
+   set04URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Submit/%%ANLAGE%%
+   set05Data  [{"id":"U6_9_1_0_1","value":$val,"prevValue":25}]
+   set05Header01 content-type: application/json; charset=UTF-8
+   set05Header02 X-Requested-With: XMLHttpRequest
+   set05Name  UpdateDHWTempReduced
+   set05Regex ([0-9]+)
+   set05URL   https://www.remocon-net.remotethermo.com/R2/PlantMenu/Submit/%%ANLAGE%%
+   showBody   1
+   showError  1
+   timeout    10
+   userattr   get01Data get01Header01 get01Header02 get01Name get01Regex get01URL get02-1Name get02-2Name get02-3Name get02-4Name get02Data get02JSON get02Name get02Poll:0,1 get02PollDelay get02Regex get02URL reading01JSON reading01Name reading01Regex replacement01Mode:reading,internal,text,expression,key replacement01Regex replacement01Value replacement02Mode:reading,internal,text,expression,key replacement02Regex replacement02Value replacement03Mode:reading,internal,text,expression,key replacement03Regex replacement03Value requestData requestHeader01 set01Data set01Header01 set01Header02 set01Name set01Regex set01URL set02Data set02Header01 set02Header02 set02Name set02Regex set02URL set03Data set03Header01 set03Header02 set03Name set03Regex set03URL set04Data set04Header01 set04Header02 set04Name set04Regex set04URL set05Data set05Header01 set05Header02 set05Name set05Regex set05URL
+   verbose    2

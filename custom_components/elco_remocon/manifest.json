@@ -1,11 +1,13 @@
 {
   "domain": "elco_remocon",
   "name": "Remocon-Net (unofficial)",
-  "codeowners": ["@bastian"],
+  "codeowners": ["@macschlingel", "@andy9999htc"],
   "config_flow": true,
-  "documentation": "https://github.com/macschlingel/ha-remocon",
+  "documentation": "https://github.com/andy9999htc/ha-remocon",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/macschlingel/ha-remocon/issues",
-  "requirements": [],
-  "version": "0.1.0"
+  "issue_tracker": "https://github.com/andy9999htc/ha-remocon/issues",
+  "requirements": [
+    "voluptuous>=0.12.0"
+  ],
+  "version": "0.2.0"
 }

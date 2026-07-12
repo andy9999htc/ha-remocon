@@ -12,7 +12,15 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import RemoconAuthError, RemoconClient, RemoconConnectionError, RemoconData
-from .const import CONF_GATEWAY_ID, CONF_ZONE, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_FEATURES_PAYLOAD,
+    CONF_GATEWAY_ID,
+    CONF_READ_STRATEGY,
+    CONF_ZONE,
+    DEFAULT_READ_STRATEGY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +46,11 @@ class ElcoRemoconCoordinator(DataUpdateCoordinator[RemoconData]):
             password=config_entry.data[CONF_PASSWORD],
             gateway_id=config_entry.data[CONF_GATEWAY_ID],
             zone=config_entry.data.get(CONF_ZONE, "1"),
+            features_payload=config_entry.data.get(CONF_FEATURES_PAYLOAD),
+            read_strategy=config_entry.options.get(
+                CONF_READ_STRATEGY,
+                config_entry.data.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
+            ),
         )
 
     async def _async_update_data(self) -> RemoconData:
