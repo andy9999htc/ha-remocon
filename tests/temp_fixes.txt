@@ -1,0 +1,43 @@
+﻿@patch("custom_components.elco_remocon.api.requests.Session")
+def test_get_raw_fallback_on_error(mock_session_class, client, mock_response_base):
+    """Test that fallback to legacy endpoint happens on BSB error."""
+    mock_session = MagicMock()
+    mock_session_class.return_value = mock_session
+
+    login_response = MagicMock()
+    login_response.status_code = 200
+    login_response.json.return_value = {"ok": True}
+
+    # First call (BSB) returns data without expected keys, triggers fallback
+    # Second call (legacy) succeeds with full data
+    incomplete_response = MagicMock()
+    incomplete_response.status_code = 200
+    incomplete_response.json.return_value = {"ok": True, "data": {}}  # Missing plantData/zoneData
+
+    success_response = MagicMock()
+    success_response.status_code = 200
+    success_response.json.return_value = {"ok": True, "data": mock_response_base["data"]}
+
+    mock_session.request.side_effect = [login_response, incomplete_response, success_response]
+
+    client.login()
+
+    # Should not raise, fallback should kick in
+    raw = client._get_raw()
+    assert raw["plantData"]["outsideTemp"] == 23.0
+
+
+@patch("custom_components.elco_remocon.api.requests")
+def test_login_auth_error(mock_requests, client):
+    """Test authentication error handling."""
+    error_response = MagicMock()
+    error_response.status_code = 401
+
+    mock_session = MagicMock()
+    mock_session.post.return_value = error_response
+    mock_requests.Session.return_value = mock_session
+
+    from custom_components.elco_remocon.api import RemoconAuthError
+
+    with pytest.raises(RemoconAuthError):
+        client.login()

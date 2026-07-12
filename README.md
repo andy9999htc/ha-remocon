@@ -9,6 +9,15 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 > **Disclaimer:** This is an unofficial community project. It is not endorsed by or affiliated with Elco or the Ariston Thermo Group.
 
+## Changelog
+
+### Unreleased
+
+- Added configurable API read strategy with integration/UI support (`legacy_first` default, plus `bsb_first`, `legacy_only`, `bsb_only`).
+- Improved compatibility for models that return legacy `items` payloads instead of `plantData/zoneData` by mapping known core values into integration data.
+- Reduced noisy non-debug logging for HTTP 500 HTML error pages (concise message by default, full body only in debug).
+- Extended standalone live test diagnostics with direct legacy read validation, selected key-value output for legacy/fallback data, and optional full legacy `items` debug dump.
+
 ## Features
 
 - **Climate entity** — Set target temperature, switch operation mode (Auto / Heat / Off), presets (Comfort / Reduced)
@@ -56,6 +65,19 @@ Restart Home Assistant.
    - **Password:** Your Remocon-Net login password
    - **Gateway ID:** Your system's gateway ID (see below)
    - **Zone:** Heating zone (default: 1)
+   - **Read strategy:** API read order/selection (default: `legacy_first`)
+   - **Custom features payload (JSON, optional):** For model-specific API features
+
+### Read strategy options
+
+The integration supports selectable API read strategies:
+
+- `legacy_first` (default): Read legacy PlantHome first, fallback to BSB
+- `bsb_first`: Read BSB first, fallback to legacy PlantHome
+- `legacy_only`: Use only legacy PlantHome
+- `bsb_only`: Use only BSB
+
+You can change this later via **Settings → Devices & Services → Remocon-Net → Configure** (options flow).
 
 ### Finding your Gateway ID
 
@@ -80,6 +102,16 @@ After setup, the following entities are created:
 | `binary_sensor.heating_active` | Binary | Heating is active |
 | `binary_sensor.cooling_active` | Binary | Cooling is active |
 | `binary_sensor.heat_pump_on` | Binary | Heat pump is running |
+
+## Services
+
+The integration also registers admin services for advanced model-specific control:
+
+- `elco_remocon.set_dhw_mode`
+- `elco_remocon.set_dhw_temperature`
+- `elco_remocon.set_data_item`
+
+If multiple Remocon entries are configured, pass `entry_id` in the service data.
 
 ### Climate entity
 
@@ -116,19 +148,141 @@ python3 remocon.py --config-file config.json raw-get
 python3 remocon.py --config-file config.json status --json
 ```
 
+## Standalone API test scripts
+
+Two standalone scripts are included for API-focused validation outside Home Assistant.
+
+### 1) Mocked script (no real cloud connection)
+
+`standalone_api_test.py` runs unit-style checks with mocked HTTP calls.
+
+It validates:
+
+- Configurable `features` payload handling
+- Fallback from BSB endpoint to legacy endpoint
+- `set_data_item` request payload construction
+
+Run:
+
+```bash
+python standalone_api_test.py
+```
+
+### 2) Live script (real Remocon-Net connection)
+
+`standalone_api_live_test.py` performs real API calls using environment variables.
+
+Default behavior:
+
+- Logs in
+- Tests direct legacy read path
+- Runs read checks (`get_data`)
+- Exercises fallback logic (forces empty BSB result and verifies legacy endpoint data)
+- Prints selected legacy/fallback values for key items
+- Skips write test unless explicitly enabled
+
+PowerShell example:
+
+```powershell
+$env:REMO_EMAIL="you@example.com"
+$env:REMO_PASSWORD="your-password"
+$env:REMO_GATEWAY_ID="YOUR_GATEWAY"
+python standalone_api_live_test.py
+```
+
+Optional write test (`set_data_item`):
+
+```powershell
+$env:REMO_RUN_WRITE="1"
+$env:REMO_ITEM_ID="ChFlowSetpointTemp"
+$env:REMO_ITEM_VALUE="28.0"
+$env:REMO_ITEM_ZONE="0"
+python standalone_api_live_test.py
+```
+
+Optional custom features payload for live test:
+
+```powershell
+$env:REMO_FEATURES_JSON='{"zones":[{"num":1,"name":"Zone 1"}],"hpSys":true}'
+python standalone_api_live_test.py
+```
+
+Known-good Elco example (returns DHW and extended legacy items on some models):
+
+```powershell
+$env:REMO_FEATURES_JSON='{"zones":[{"num":1,"name":"Zone 1"}],"hpSys":true,"dhwProgSupported":true,"virtualZones":true,"dhwBoilerPresent":true,"dhwModeChangeable":true,"autoThermoReg":true,"hasMetering":true,"useCache":true,"zone":1,"filter":{"notEssentials":true,"progId":null,"plant":true,"zone":true,"dhw":true}}'
+python standalone_api_live_test.py
+```
+
+Note: custom features are merged with integration defaults. You can provide only model-specific overrides and keep baseline flags.
+
+Optional debug output for live test:
+
+```powershell
+$env:REMO_DEBUG="1"
+python standalone_api_live_test.py
+```
+
+Optional full legacy `items` dump in debug mode:
+
+```powershell
+$env:REMO_DEBUG="1"
+$env:REMO_DEBUG_FULL_ITEMS="1"
+python standalone_api_live_test.py
+```
+
+### Automation item IDs (validated)
+
+The following `set_data_item` IDs have been validated with real-device testing:
+
+- `DhwTemp` (zone `0`) — DHW setpoint temperature write
+- `PlantMode` (zone `0`) — plant mode read (and candidate for mode switching writes)
+
+Set DHW setpoint to 45 C:
+
+```powershell
+$env:REMO_RUN_WRITE="1"
+$env:REMO_ITEM_ID="DhwTemp"
+$env:REMO_ITEM_VALUE="45"
+$env:REMO_ITEM_ZONE="0"
+python standalone_api_live_test.py
+```
+
+PlantMode values observed in payload:
+
+- `0` = Summer
+- `1` = Winter
+- `2` = Heating only
+- `3` = Cooling
+- `5` = OFF
+
+Try a PlantMode write (example: Winter):
+
+```powershell
+$env:REMO_RUN_WRITE="1"
+$env:REMO_ITEM_ID="PlantMode"
+$env:REMO_ITEM_VALUE="1"
+$env:REMO_ITEM_ZONE="0"
+python standalone_api_live_test.py
+```
+
 ## Known limitations
 
 - **Cloud-dependent:** Control goes through the Remocon-Net cloud. No control possible during internet outages.
 - **Polling:** Data is fetched every 2 minutes (no real-time streaming).
 - **No room sensor:** If no room thermostat is connected, `current_temperature` shows the target value.
-- **DHW read-only:** Domestic hot water entities are displayed, but DHW control is not yet available through the HA entity (works via CLI).
+- **DHW entity control:** DHW writes are available through integration services, but dedicated DHW HA entities are not implemented yet.
+
+- **Model-specific features:** Some models require custom `features` payload values to expose all readable/writable data items.
+
+- **Model-specific payload shape:** Some models return legacy `items` format instead of `plantData/zoneData`; this integration now maps known legacy items for core climate/sensor values.
 
 ## Technical details
 
 The integration uses the same API as the Elco Remocon-Net web app:
 
 - **Login:** Cookie-based authentication via `/R2/Account/Login`
-- **Data:** R2 Web API (`/R2/PlantHomeBsb/GetData/`) + v2 REST API (`/api/v2/remote/dataItems/`)
+- **Data:** R2 Web API (`/R2/PlantHome/GetData/`, `/R2/PlantHomeBsb/GetData/`) + v2 REST API (`/api/v2/remote/dataItems/`)
 - **Control:** v2 REST API (`/api/v2/remote/bsbZones/`, `/api/v2/remote/bsbPlantData/`)
 - **Platform:** remotethermo.com (Ariston Thermo Group)
 

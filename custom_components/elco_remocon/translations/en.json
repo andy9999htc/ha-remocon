@@ -8,14 +8,43 @@
           "email": "Email",
           "password": "Password",
           "gateway_id": "Gateway ID",
-          "zone": "Zone"
+          "zone": "Zone",
+          "read_strategy": "Read strategy",
+          "features_payload": "Custom features payload (JSON, optional)"
+        }
+      },
+      "init": {
+        "data": {
+          "read_strategy": "Read strategy"
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Advanced options",
+          "description": "Adjust API read behavior for model-specific compatibility.",
+          "data": {
+            "read_strategy": "Read strategy"
+          }
         }
       }
     },
     "error": {
       "auth": "Login failed. Email or password incorrect.",
       "connection": "Connection to the Remocon-Net Cloud failed.",
-      "no_data": "No data received from the system. Is the Gateway ID correct?"
+      "no_data": "No data received from the system. Is the Gateway ID correct?",
+      "invalid_features": "Invalid JSON in custom features payload."
+    },
+    "selector": {
+      "read_strategy": {
+        "options": {
+          "legacy_first": "Legacy first, BSB fallback",
+          "bsb_first": "BSB first, legacy fallback",
+          "legacy_only": "Legacy only",
+          "bsb_only": "BSB only"
+        }
+      }
     }
   },
   "entity": {
