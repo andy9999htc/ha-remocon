@@ -13,10 +13,19 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ### Unreleased
 
+- No unreleased changes yet.
+
+### v0.2.1
+
 - Added configurable API read strategy with integration/UI support (`legacy_first` default, plus `bsb_first`, `legacy_only`, `bsb_only`).
-- Improved compatibility for models that return legacy `items` payloads instead of `plantData/zoneData` by mapping known core values into integration data.
+- Added options-flow support to change read strategy after initial setup.
+- Improved compatibility for models that return legacy `items` payloads instead of `plantData/zoneData` by mapping known climate/sensor values into integration data.
+- Added safer custom features handling: custom `features_payload` now merges with defaults (instead of replacing them), avoiding accidental loss of required DHW/legacy flags.
+- Fixed DHW temperature mapping for legacy items payloads: `DhwStorageTemperature` is now preferred for reported DHW temperature, with `DhwTemp` as fallback.
 - Reduced noisy non-debug logging for HTTP 500 HTML error pages (concise message by default, full body only in debug).
 - Extended standalone live test diagnostics with direct legacy read validation, selected key-value output for legacy/fallback data, and optional full legacy `items` debug dump.
+- Added standalone full-data dump mode (`REMO_DUMP_ALL_DATA=1`) to print full payload details without request-level debug noise.
+- Added and documented validated automation item IDs and examples for real-device writes (`DhwTemp`, `PlantMode`) in the README.
 
 ## Features
 
