@@ -48,6 +48,16 @@
     }
   },
   "entity": {
+    "number": {
+      "dhw_set_temperature": {
+        "name": "Warmwasser Solltemperatur"
+      }
+    },
+    "select": {
+      "plant_mode": {
+        "name": "Anlagenmodus"
+      }
+    },
     "sensor": {
       "outside_temperature": {
         "name": "Außentemperatur"

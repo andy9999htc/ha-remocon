@@ -15,6 +15,14 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.2
+
+- Added writable Home Assistant Number entity for DHW setpoint temperature (maps to `DhwTemp`).
+- Added writable Home Assistant Select entity for Plant Mode (maps to `PlantMode`).
+- Added dedicated API helpers for the new setters (`set_dhw_set_temp`, `set_plant_mode`).
+- Fixed DHW temperature mapping so sensor value prefers storage temperature (`DhwStorageTemperature`) with `DhwTemp` as fallback.
+- Added translations and test coverage for the new writable entities and setters.
+
 ### v0.2.1
 
 - Added configurable API read strategy with integration/UI support (`legacy_first` default, plus `bsb_first`, `legacy_only`, `bsb_only`).
@@ -33,6 +41,7 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 - **Sensors** — Outside temperature, flow temperature, target temperature, system pressure
 - **Binary sensors** — Heating active, cooling active, heat pump running
 - **Config flow** — Easy setup directly in the Home Assistant UI
+- **Writable controls** — DHW setpoint Number + Plant Mode Select entities
 - **CLI tool** — Standalone `remocon.py` for testing and debugging from the terminal
 
 ## Requirements
@@ -108,6 +117,8 @@ After setup, the following entities are created:
 | `sensor.reduced_temperature` | Sensor | Reduced setpoint temperature |
 | `sensor.flow_temperature` | Sensor | Flow temperature |
 | `sensor.system_pressure` | Sensor | System pressure (bar) |
+| `number.dhw_set_temperature` | Number | Writable DHW setpoint temperature |
+| `select.plant_mode` | Select | Writable plant mode (`Summer/Winter/Heating only/Cooling/OFF`) |
 | `binary_sensor.heating_active` | Binary | Heating is active |
 | `binary_sensor.cooling_active` | Binary | Cooling is active |
 | `binary_sensor.heat_pump_on` | Binary | Heat pump is running |
@@ -275,12 +286,36 @@ $env:REMO_ITEM_ZONE="0"
 python standalone_api_live_test.py
 ```
 
+### Home Assistant automation examples
+
+Set DHW setpoint to 45 C via Number entity:
+
+```yaml
+action:
+   - service: number.set_value
+      target:
+         entity_id: number.dhw_set_temperature
+      data:
+         value: 45
+```
+
+Set Plant Mode to Winter via Select entity:
+
+```yaml
+action:
+   - service: select.select_option
+      target:
+         entity_id: select.plant_mode
+      data:
+         option: Winter
+```
+
 ## Known limitations
 
 - **Cloud-dependent:** Control goes through the Remocon-Net cloud. No control possible during internet outages.
 - **Polling:** Data is fetched every 2 minutes (no real-time streaming).
 - **No room sensor:** If no room thermostat is connected, `current_temperature` shows the target value.
-- **DHW entity control:** DHW writes are available through integration services, but dedicated DHW HA entities are not implemented yet.
+- **Model differences:** Writable item availability and accepted value ranges can vary by model/firmware; verify values with the standalone live script when in doubt.
 
 - **Model-specific features:** Some models require custom `features` payload values to expose all readable/writable data items.
 

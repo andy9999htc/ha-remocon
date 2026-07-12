@@ -48,6 +48,16 @@
     }
   },
   "entity": {
+    "number": {
+      "dhw_set_temperature": {
+        "name": "DHW Set Temperature"
+      }
+    },
+    "select": {
+      "plant_mode": {
+        "name": "Plant Mode"
+      }
+    },
     "sensor": {
       "outside_temperature": {
         "name": "Outside Temperature"

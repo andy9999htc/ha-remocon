@@ -257,14 +257,32 @@ def test_get_data_from_legacy_items(mock_session_class, client, mock_legacy_item
     assert data.reduced_temp == 18.0
     assert data.desired_temp == 24.0
     assert data.dhw_temp == 76.0
+    assert data.dhw_set_temp == 40.0
     assert data.dhw_comfort_temp == 55.0
     assert data.dhw_reduced_temp == 47.0
     assert data.heat_or_cool_request is True
     assert data.heat_pump_on is False
     assert data.cooling_active is True
     assert data.zone_mode == 3
+    assert data.plant_mode == 3
     assert data.system_pressure == 1.5
     assert data.flow_temperature == 25.0
+
+
+def test_set_dhw_set_temp_uses_data_item(client):
+    """DHW set temperature helper should map to DhwTemp data item."""
+    with patch.object(client, "set_data_item") as mock_set_data_item:
+        client.set_dhw_set_temp(45.0)
+
+    mock_set_data_item.assert_called_once_with("DhwTemp", 45.0, zone=0)
+
+
+def test_set_plant_mode_uses_data_item(client):
+    """Plant mode helper should map to PlantMode data item."""
+    with patch.object(client, "set_data_item") as mock_set_data_item:
+        client.set_plant_mode(1)
+
+    mock_set_data_item.assert_called_once_with("PlantMode", 1, zone=0)
 
 
 @patch("custom_components.elco_remocon.api.requests.Session")

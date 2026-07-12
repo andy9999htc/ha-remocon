@@ -18,6 +18,8 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
 ]
 
 SERVICE_SET_DHW_MODE = "set_dhw_mode"

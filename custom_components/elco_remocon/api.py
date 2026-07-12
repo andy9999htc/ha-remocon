@@ -135,10 +135,12 @@ class RemoconData:
     # Plant
     outside_temp: float = 0.0
     dhw_temp: float = 0.0
+    dhw_set_temp: Optional[float] = None
     dhw_comfort_temp: float = 0.0
     dhw_reduced_temp: float = 0.0
     dhw_mode: int = 0
     dhw_enabled: bool = False
+    plant_mode: Optional[int] = None
     heat_pump_on: bool = False
     flame_sensor: bool = False
     # System (from v2 API)
@@ -426,10 +428,12 @@ class RemoconClient:
             heat_or_cool_request=self._coerce_bool(heat_request_item.get("value", 0)),
             outside_temp=float(_value("OutsideTemp", 0, 0)),
             dhw_temp=float(_value("DhwStorageTemperature", 0, _value("DhwTemp", 0, 0))),
+            dhw_set_temp=float(_value("DhwTemp", 0, _value("DhwTimeProgComfortTemp", 0, 0))),
             dhw_comfort_temp=float(_value("DhwTimeProgComfortTemp", 0, 0)),
             dhw_reduced_temp=float(_value("DhwTimeProgEconomyTemp", 0, 0)),
             dhw_mode=int(float(_value("DhwMode", 0, 0))),
             dhw_enabled=self._coerce_bool(_value("DhwMode", 0, 0)),
+            plant_mode=int(float(plant_mode_value)) if plant_mode_value is not None else None,
             heat_pump_on=self._coerce_bool(_value("IsHeatingPumpOn", 0, 0)),
             flame_sensor=False,
             system_pressure=None,
@@ -503,10 +507,12 @@ class RemoconClient:
             heat_or_cool_request=bool(zone.get("heatOrCoolRequest", 0)),
             outside_temp=float(plant.get("outsideTemp", 0)),
             dhw_temp=float(plant.get("dhwStorageTemp", 0)),
+            dhw_set_temp=float(dhw_comfort.get("value", 0)),
             dhw_comfort_temp=float(dhw_comfort.get("value", 0)),
             dhw_reduced_temp=float(dhw_reduced.get("value", 0)),
             dhw_mode=dhw_mode_info.get("value", 0),
             dhw_enabled=bool(plant.get("dhwEnabled", 0)),
+            plant_mode=None,
             heat_pump_on=bool(plant.get("heatPumpOn", 0)),
             flame_sensor=bool(plant.get("flameSensor", 0)),
             system_pressure=float(pressure) if pressure is not None else None,
@@ -592,6 +598,14 @@ class RemoconClient:
             "features": self._features_payload,
         }
         self._request("POST", path, json=payload)
+
+    def set_dhw_set_temp(self, value: float) -> None:
+        """Set DHW setpoint temperature via generic data item write."""
+        self.set_data_item("DhwTemp", value, zone=0)
+
+    def set_plant_mode(self, value: int) -> None:
+        """Set plant mode via generic data item write."""
+        self.set_data_item("PlantMode", value, zone=0)
 
     def reauth(self) -> None:
         """Force re-authentication."""
