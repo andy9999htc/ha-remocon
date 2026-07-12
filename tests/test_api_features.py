@@ -82,6 +82,7 @@ def mock_legacy_items_response():
                 {"id": "ZoneDesiredTemp", "zone": 1, "value": 24.0, "decimals": 1, "unit": "\u00b0C"},
                 {"id": "ZoneMeasuredTemp", "zone": 1, "value": 0.0, "decimals": 1, "unit": "\u00b0C"},
                 {"id": "ZoneHeatRequest", "zone": 1, "value": 1.0, "options": [0, 1], "optTexts": ["OFF", "ON"]},
+                {"id": "DhwTemp", "zone": 0, "value": 40.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwStorageTemperature", "zone": 0, "value": 76.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwTimeProgComfortTemp", "zone": 0, "value": 55.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwTimeProgEconomyTemp", "zone": 0, "value": 47.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
