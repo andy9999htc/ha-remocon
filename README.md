@@ -40,7 +40,7 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 1. Open HACS in Home Assistant
 2. **≡ Menu** → **Custom Repositories**
 3. Add:
-   - **URL:** `https://github.com/macschlingel/ha-remocon`
+   - **URL:** `https://github.com/andy9999htc/ha-remocon`
    - **Category:** Integration
 4. Search for **"Remocon-Net"** in HACS and install
 5. Restart Home Assistant
@@ -49,7 +49,7 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ```bash
 cd /path/to/homeassistant/config/custom_components/
-git clone https://github.com/macschlingel/ha-remocon.git elco_remocon_temp
+git clone https://github.com/andy9999htc/ha-remocon.git elco_remocon_temp
 cp -r elco_remocon_temp/custom_components/elco_remocon ./
 rm -rf elco_remocon_temp
 ```

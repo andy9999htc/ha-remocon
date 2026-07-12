@@ -425,7 +425,7 @@ class RemoconClient:
             cooling_active=cooling_active,
             heat_or_cool_request=self._coerce_bool(heat_request_item.get("value", 0)),
             outside_temp=float(_value("OutsideTemp", 0, 0)),
-            dhw_temp=float(_value("DhwTemp", 0, _value("DhwStorageTemperature", 0, 0))),
+            dhw_temp=float(_value("DhwStorageTemperature", 0, _value("DhwTemp", 0, 0))),
             dhw_comfort_temp=float(_value("DhwTimeProgComfortTemp", 0, 0)),
             dhw_reduced_temp=float(_value("DhwTimeProgEconomyTemp", 0, 0)),
             dhw_mode=int(float(_value("DhwMode", 0, 0))),
