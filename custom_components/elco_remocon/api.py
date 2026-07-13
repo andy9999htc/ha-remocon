@@ -219,6 +219,11 @@ class RemoconClient:
         except requests.RequestException as err:
             err_msg = str(err)
             response = getattr(err, "response", None)
+            is_bsb_get_data_500 = (
+                response is not None
+                and response.status_code == 500
+                and path.startswith("/R2/PlantHomeBsb/GetData/")
+            )
             if response is not None:
                 response_text = response.text.strip()
                 content_type = response.headers.get("Content-Type", "")
@@ -231,7 +236,13 @@ class RemoconClient:
                     err_msg += f" - Response: {response.text}"
                 elif is_html:
                     err_msg += " - Response body omitted (HTML error page; enable debug logging for full body)"
-            _LOGGER.error("API Request failed: %s", err_msg)
+            if is_bsb_get_data_500:
+                _LOGGER.info(
+                    "BSB endpoint returned HTTP 500 for %s; using legacy endpoint fallback when strategy allows",
+                    path,
+                )
+            else:
+                _LOGGER.error("API Request failed: %s", err_msg)
             raise RemoconConnectionError(err_msg) from err
         
         try:

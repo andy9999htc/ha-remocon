@@ -15,6 +15,11 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.3
+
+- Reduced noisy error logging when the BSB GetData endpoint returns HTTP 500 on unsupported models.
+- Added explicit info-level logging for this compatibility case and clarified that legacy endpoint fallback is used when the configured read strategy allows it.
+
 ### v0.2.2
 
 - Added writable Home Assistant Number entity for DHW setpoint temperature (maps to `DhwTemp`).

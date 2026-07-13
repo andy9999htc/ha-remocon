@@ -1,9 +1,11 @@
 ﻿"""Unit tests for Elco Remocon-Net API client with configurable features."""
 
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from custom_components.elco_remocon.api import (
     DEFAULT_FEATURES_PAYLOAD,
@@ -473,6 +475,43 @@ def test_empty_data_error(mock_session_class, client):
 
     with pytest.raises(RemoconDataError):
         client._get_raw()
+
+
+@patch("custom_components.elco_remocon.api.requests.Session")
+def test_bsb_500_is_logged_as_info_and_not_error(mock_session_class, client, caplog):
+    """BSB GetData HTTP 500 should be treated as compatibility noise, not error spam."""
+    mock_session = MagicMock()
+    mock_session_class.return_value = mock_session
+
+    login_response = MagicMock()
+    login_response.status_code = 200
+    login_response.json.return_value = {"ok": True}
+
+    error_response = MagicMock()
+    error_response.status_code = 500
+    error_response.headers = {"Content-Type": "text/html"}
+    error_response.text = "<html><body>Internal Server Error</body></html>"
+    error_response.raise_for_status.side_effect = requests.HTTPError(
+        "500 Server Error: Internal Server Error",
+        response=error_response,
+    )
+
+    mock_session.request.side_effect = [login_response, error_response]
+
+    client.login()
+
+    with caplog.at_level(logging.INFO, logger="custom_components.elco_remocon.api"):
+        with pytest.raises(RemoconConnectionError):
+            client._get_raw_bsb()
+
+    assert any(
+        "BSB endpoint returned HTTP 500" in record.message and record.levelno == logging.INFO
+        for record in caplog.records
+    )
+    assert not any(
+        "API Request failed" in record.message and record.levelno >= logging.ERROR
+        for record in caplog.records
+    )
 
 
 # ============================================================================
