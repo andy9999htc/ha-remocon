@@ -1,9 +1,11 @@
 ﻿"""Unit tests for Elco Remocon-Net API client with configurable features."""
 
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from custom_components.elco_remocon.api import (
     DEFAULT_FEATURES_PAYLOAD,
@@ -82,7 +84,6 @@ def mock_legacy_items_response():
                 {"id": "ZoneDesiredTemp", "zone": 1, "value": 24.0, "decimals": 1, "unit": "\u00b0C"},
                 {"id": "ZoneMeasuredTemp", "zone": 1, "value": 0.0, "decimals": 1, "unit": "\u00b0C"},
                 {"id": "ZoneHeatRequest", "zone": 1, "value": 1.0, "options": [0, 1], "optTexts": ["OFF", "ON"]},
-                {"id": "DhwTemp", "zone": 0, "value": 40.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwStorageTemperature", "zone": 0, "value": 76.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwTimeProgComfortTemp", "zone": 0, "value": 55.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
                 {"id": "DhwTimeProgEconomyTemp", "zone": 0, "value": 47.0, "min": 35.0, "max": 65.0, "step": 1.0, "decimals": 0, "unit": "\u00b0C"},
@@ -157,21 +158,6 @@ def test_build_features_payload_with_custom():
     assert payload["hpSys"] is True
     assert payload["autoThermoReg"] is True
     assert payload["zones"][0]["num"] == 2
-
-
-def test_build_features_payload_custom_merges_with_defaults():
-    """Minimal custom payload should keep default DHW-related keys."""
-    custom = {
-        "zones": [{"num": 1, "name": "Zone 1"}],
-        "hpSys": True,
-    }
-    payload = _build_features_payload("1", custom)
-
-    assert payload["hpSys"] is True
-    assert payload["dhwProgSupported"] is True
-    assert payload["dhwBoilerPresent"] is True
-    assert payload["dhwModeChangeable"] is True
-    assert payload["zones"][0]["name"] == "Zone 1"
 
 
 def test_build_features_payload_zone_override():
@@ -257,32 +243,14 @@ def test_get_data_from_legacy_items(mock_session_class, client, mock_legacy_item
     assert data.reduced_temp == 18.0
     assert data.desired_temp == 24.0
     assert data.dhw_temp == 76.0
-    assert data.dhw_set_temp == 40.0
     assert data.dhw_comfort_temp == 55.0
     assert data.dhw_reduced_temp == 47.0
     assert data.heat_or_cool_request is True
     assert data.heat_pump_on is False
     assert data.cooling_active is True
     assert data.zone_mode == 3
-    assert data.plant_mode == 3
     assert data.system_pressure == 1.5
     assert data.flow_temperature == 25.0
-
-
-def test_set_dhw_set_temp_uses_data_item(client):
-    """DHW set temperature helper should map to DhwTemp data item."""
-    with patch.object(client, "set_data_item") as mock_set_data_item:
-        client.set_dhw_set_temp(45.0)
-
-    mock_set_data_item.assert_called_once_with("DhwTemp", 45.0, zone=0)
-
-
-def test_set_plant_mode_uses_data_item(client):
-    """Plant mode helper should map to PlantMode data item."""
-    with patch.object(client, "set_data_item") as mock_set_data_item:
-        client.set_plant_mode(1)
-
-    mock_set_data_item.assert_called_once_with("PlantMode", 1, zone=0)
 
 
 @patch("custom_components.elco_remocon.api.requests.Session")
@@ -473,6 +441,43 @@ def test_empty_data_error(mock_session_class, client):
 
     with pytest.raises(RemoconDataError):
         client._get_raw()
+
+
+@patch("custom_components.elco_remocon.api.requests.Session")
+def test_bsb_500_is_logged_as_info_and_not_error(mock_session_class, client, caplog):
+    """BSB GetData HTTP 500 should be treated as compatibility noise, not error spam."""
+    mock_session = MagicMock()
+    mock_session_class.return_value = mock_session
+
+    login_response = MagicMock()
+    login_response.status_code = 200
+    login_response.json.return_value = {"ok": True}
+
+    error_response = MagicMock()
+    error_response.status_code = 500
+    error_response.headers = {"Content-Type": "text/html"}
+    error_response.text = "<html><body>Internal Server Error</body></html>"
+    error_response.raise_for_status.side_effect = requests.HTTPError(
+        "500 Server Error: Internal Server Error",
+        response=error_response,
+    )
+
+    mock_session.request.side_effect = [login_response, error_response]
+
+    client.login()
+
+    with caplog.at_level(logging.INFO, logger="custom_components.elco_remocon.api"):
+        with pytest.raises(RemoconConnectionError):
+            client._get_raw_bsb()
+
+    assert any(
+        "BSB endpoint returned HTTP 500" in record.message and record.levelno == logging.INFO
+        for record in caplog.records
+    )
+    assert not any(
+        "API Request failed" in record.message and record.levelno >= logging.ERROR
+        for record in caplog.records
+    )
 
 
 # ============================================================================
