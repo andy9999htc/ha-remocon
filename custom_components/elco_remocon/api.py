@@ -49,9 +49,26 @@ DEFAULT_FEATURES_PAYLOAD = {
 }
 
 
+def _deep_merge_features(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Deep-merge feature payload dictionaries.
+
+    Dict values are merged recursively, while non-dict values (including lists)
+    replace the base value.
+    """
+    merged = deepcopy(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge_features(merged[key], value)
+        else:
+            merged[key] = deepcopy(value)
+    return merged
+
+
 def _build_features_payload(zone: str, custom_features: Optional[dict[str, Any]]) -> dict[str, Any]:
     """Build the features payload sent to the v2 API."""
-    payload = deepcopy(custom_features) if custom_features else deepcopy(DEFAULT_FEATURES_PAYLOAD)
+    payload = deepcopy(DEFAULT_FEATURES_PAYLOAD)
+    if custom_features:
+        payload = _deep_merge_features(payload, custom_features)
     zone_num = int(zone)
 
     zones = payload.get("zones")
@@ -118,10 +135,12 @@ class RemoconData:
     # Plant
     outside_temp: float = 0.0
     dhw_temp: float = 0.0
+    dhw_set_temp: Optional[float] = None
     dhw_comfort_temp: float = 0.0
     dhw_reduced_temp: float = 0.0
     dhw_mode: int = 0
     dhw_enabled: bool = False
+    plant_mode: Optional[int] = None
     heat_pump_on: bool = False
     flame_sensor: bool = False
     # System (from v2 API)
@@ -285,10 +304,7 @@ class RemoconClient:
             if _is_empty_payload(data):
                 data = self._get_raw_bsb()
             elif isinstance(data, dict) and not data.get("zoneData") and not data.get("plantData") and not data.get("items"):
-                try:
-                    data = self._get_raw_bsb()
-                except RemoconApiError:
-                    _LOGGER.info("BSB follow-up read failed; keeping legacy payload")
+                data = self._get_raw_bsb()
         else:  # READ_STRATEGY_BSB_FIRST
             try:
                 data = self._get_raw_bsb()
@@ -422,11 +438,13 @@ class RemoconClient:
             cooling_active=cooling_active,
             heat_or_cool_request=self._coerce_bool(heat_request_item.get("value", 0)),
             outside_temp=float(_value("OutsideTemp", 0, 0)),
-            dhw_temp=float(_value("DhwStorageTemperature", 0, 0)),
+            dhw_temp=float(_value("DhwStorageTemperature", 0, _value("DhwTemp", 0, 0))),
+            dhw_set_temp=float(_value("DhwTemp", 0, _value("DhwTimeProgComfortTemp", 0, 0))),
             dhw_comfort_temp=float(_value("DhwTimeProgComfortTemp", 0, 0)),
             dhw_reduced_temp=float(_value("DhwTimeProgEconomyTemp", 0, 0)),
             dhw_mode=int(float(_value("DhwMode", 0, 0))),
             dhw_enabled=self._coerce_bool(_value("DhwMode", 0, 0)),
+            plant_mode=int(float(plant_mode_value)) if plant_mode_value is not None else None,
             heat_pump_on=self._coerce_bool(_value("IsHeatingPumpOn", 0, 0)),
             flame_sensor=False,
             system_pressure=None,
@@ -500,10 +518,12 @@ class RemoconClient:
             heat_or_cool_request=bool(zone.get("heatOrCoolRequest", 0)),
             outside_temp=float(plant.get("outsideTemp", 0)),
             dhw_temp=float(plant.get("dhwStorageTemp", 0)),
+            dhw_set_temp=float(dhw_comfort.get("value", 0)),
             dhw_comfort_temp=float(dhw_comfort.get("value", 0)),
             dhw_reduced_temp=float(dhw_reduced.get("value", 0)),
             dhw_mode=dhw_mode_info.get("value", 0),
             dhw_enabled=bool(plant.get("dhwEnabled", 0)),
+            plant_mode=None,
             heat_pump_on=bool(plant.get("heatPumpOn", 0)),
             flame_sensor=bool(plant.get("flameSensor", 0)),
             system_pressure=float(pressure) if pressure is not None else None,
@@ -589,6 +609,14 @@ class RemoconClient:
             "features": self._features_payload,
         }
         self._request("POST", path, json=payload)
+
+    def set_dhw_set_temp(self, value: float) -> None:
+        """Set DHW setpoint temperature via generic data item write."""
+        self.set_data_item("DhwTemp", value, zone=0)
+
+    def set_plant_mode(self, value: int) -> None:
+        """Set plant mode via generic data item write."""
+        self.set_data_item("PlantMode", value, zone=0)
 
     def reauth(self) -> None:
         """Force re-authentication."""
