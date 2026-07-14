@@ -11,6 +11,7 @@ from urllib.parse import quote
 import requests
 
 from .const import (
+    DEFAULT_ERROR_LOG_AFTER_FAILURES,
     DEFAULT_READ_STRATEGY,
     MODE_AUTOMATIC,
     MODE_COMFORT,
@@ -169,6 +170,8 @@ class RemoconClient:
         self._features_payload = _build_features_payload(zone, features_payload)
         self._read_strategy = read_strategy if read_strategy in READ_STRATEGIES else DEFAULT_READ_STRATEGY
         self._session: Optional[requests.Session] = None
+        self._consecutive_request_failures = 0
+        self._error_log_after_failures = DEFAULT_ERROR_LOG_AFTER_FAILURES
 
     def login(self) -> None:
         """Authenticate and store session cookie."""
@@ -217,6 +220,7 @@ class RemoconClient:
                 raise RemoconAuthError("Session expired")
             resp.raise_for_status()
         except requests.RequestException as err:
+            self._consecutive_request_failures += 1
             err_msg = str(err)
             response = getattr(err, "response", None)
             is_bsb_get_data_500 = (
@@ -237,13 +241,41 @@ class RemoconClient:
                 elif is_html:
                     err_msg += " - Response body omitted (HTML error page; enable debug logging for full body)"
             if is_bsb_get_data_500:
-                _LOGGER.info(
-                    "BSB endpoint returned HTTP 500 for %s; using legacy endpoint fallback when strategy allows",
-                    path,
-                )
+                if self._consecutive_request_failures >= self._error_log_after_failures:
+                    _LOGGER.info(
+                        "BSB endpoint returned HTTP 500 for %s; using legacy endpoint fallback when strategy allows",
+                        path,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Transient BSB HTTP 500 (%s/%s before escalation) for %s",
+                        self._consecutive_request_failures,
+                        self._error_log_after_failures,
+                        path,
+                    )
             else:
-                _LOGGER.error("API Request failed: %s", err_msg)
+                if self._consecutive_request_failures >= self._error_log_after_failures:
+                    _LOGGER.error(
+                        "API Request failed (%s consecutive failures): %s",
+                        self._consecutive_request_failures,
+                        err_msg,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Transient API request failure (%s/%s before error logging): %s",
+                        self._consecutive_request_failures,
+                        self._error_log_after_failures,
+                        err_msg,
+                    )
             raise RemoconConnectionError(err_msg) from err
+
+        if self._consecutive_request_failures > 0:
+            if self._consecutive_request_failures >= self._error_log_after_failures:
+                _LOGGER.info(
+                    "Remocon API request recovered after %s consecutive failure(s)",
+                    self._consecutive_request_failures,
+                )
+            self._consecutive_request_failures = 0
         
         try:
             return resp.json()
