@@ -15,6 +15,12 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.4
+
+- Improved cloud polling robustness with coordinator-level retries (3 attempts with 10-second delay) for transient Remocon connectivity failures.
+- Added delayed connection error escalation: transient failures are kept at debug level and only escalated after repeated consecutive failures.
+- Reduced API log noise by suppressing immediate error-level logs for intermittent request failures; persistent failures still escalate and recovery is logged.
+
 ### v0.2.3
 
 - Reduced noisy error logging when the BSB GetData endpoint returns HTTP 500 on unsupported models.
