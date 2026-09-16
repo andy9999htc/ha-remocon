@@ -14,10 +14,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import RemoconAuthError, RemoconClient, RemoconConnectionError, RemoconData
 from .const import (
+    CONF_DHW_WRITE_STRATEGY,
     CONF_FEATURES_PAYLOAD,
     CONF_GATEWAY_ID,
     CONF_READ_STRATEGY,
     CONF_ZONE,
+    DEFAULT_DHW_WRITE_STRATEGY,
     DEFAULT_READ_STRATEGY,
     DEFAULT_ERROR_LOG_AFTER_FAILURES,
     DEFAULT_REQUEST_RETRY_COUNT,
@@ -54,6 +56,10 @@ class ElcoRemoconCoordinator(DataUpdateCoordinator[RemoconData]):
             read_strategy=config_entry.options.get(
                 CONF_READ_STRATEGY,
                 config_entry.data.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
+            ),
+            dhw_write_strategy=config_entry.options.get(
+                CONF_DHW_WRITE_STRATEGY,
+                config_entry.data.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
             ),
         )
         self._consecutive_connection_failures = 0

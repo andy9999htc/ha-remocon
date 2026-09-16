@@ -10,12 +10,14 @@
           "gateway_id": "Gateway ID",
           "zone": "Zone",
           "read_strategy": "Read strategy",
+          "dhw_write_strategy": "DHW write strategy",
           "features_payload": "Custom features payload (JSON, optional)"
         }
       },
       "init": {
         "data": {
-          "read_strategy": "Read strategy"
+          "read_strategy": "Read strategy",
+          "dhw_write_strategy": "DHW write strategy"
         }
       }
     },
@@ -25,7 +27,8 @@
           "title": "Advanced options",
           "description": "Adjust API read behavior for model-specific compatibility.",
           "data": {
-            "read_strategy": "Read strategy"
+            "read_strategy": "Read strategy",
+            "dhw_write_strategy": "DHW write strategy"
           }
         }
       }
@@ -43,6 +46,12 @@
           "bsb_first": "BSB first, legacy fallback",
           "legacy_only": "Legacy only",
           "bsb_only": "BSB only"
+        }
+      },
+      "dhw_write_strategy": {
+        "options": {
+          "bsb_plantdata_first": "bsbPlantData first, data items fallback",
+          "data_item_first": "Data items first, bsbPlantData fallback"
         }
       }
     }

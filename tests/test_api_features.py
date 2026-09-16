@@ -15,6 +15,7 @@ from custom_components.elco_remocon.api import (
     _build_features_payload,
 )
 from custom_components.elco_remocon.const import (
+    DHW_WRITE_STRATEGY_DATA_ITEM_FIRST,
     READ_STRATEGY_BSB_FIRST,
     READ_STRATEGY_BSB_ONLY,
     READ_STRATEGY_LEGACY_FIRST,
@@ -133,6 +134,18 @@ def client_with_custom_features():
         gateway_id="TEST123",
         zone="1",
         features_payload=custom_features,
+    )
+
+
+@pytest.fixture
+def client_data_item_first():
+    """Create a test client preferring data item writes for DHW."""
+    return RemoconClient(
+        email="test@example.com",
+        password="password",
+        gateway_id="TEST123",
+        zone="1",
+        dhw_write_strategy=DHW_WRITE_STRATEGY_DATA_ITEM_FIRST,
     )
 
 
@@ -379,6 +392,68 @@ def test_set_dhw_temperature(mock_session_class, client, mock_response_base):
     # Verify the write request was made with correct payload
     calls = [c for c in mock_session.request.call_args_list if "/api/v2/remote/bsbPlantData/" in str(c)]
     assert len(calls) > 0
+
+
+def test_set_dhw_temperature_falls_back_to_data_items_on_write_error(client):
+    """DHW comfort/reduced write should fallback to dataItems if primary endpoint fails."""
+    with patch.object(client, "_get_raw") as mock_get_raw, patch.object(client, "_request") as mock_request, patch.object(client, "set_data_item") as mock_set_data_item:
+        mock_get_raw.return_value = {
+            "plantData": {
+                "dhwComfortTemp": {"value": 45.0},
+                "dhwReducedTemp": {"value": 40.0},
+            }
+        }
+        mock_request.side_effect = RemoconConnectionError("500 Server Error")
+
+        client.set_dhw_temperature(comfort=50.0, reduced=44.0)
+
+    mock_set_data_item.assert_any_call("DhwTimeProgComfortTemp", 50.0, zone=0)
+    mock_set_data_item.assert_any_call("DhwTimeProgEconomyTemp", 44.0, zone=0)
+    assert mock_set_data_item.call_count == 2
+
+
+def test_set_dhw_temperature_switches_to_data_items_after_first_500(client):
+    """After first HTTP 500, future DHW writes should skip primary endpoint."""
+    with patch.object(client, "_get_raw") as mock_get_raw, patch.object(client, "_request") as mock_request, patch.object(client, "set_data_item") as mock_set_data_item:
+        mock_get_raw.return_value = {
+            "plantData": {
+                "dhwComfortTemp": {"value": 45.0},
+                "dhwReducedTemp": {"value": 40.0},
+            }
+        }
+        mock_request.side_effect = RemoconConnectionError("500 Server Error")
+
+        client.set_dhw_temperature(comfort=50.0, reduced=44.0)
+        client.set_dhw_temperature(comfort=51.0, reduced=43.0)
+
+    assert mock_request.call_count == 1
+    assert client._use_data_items_for_dhw_temperature is True
+    mock_set_data_item.assert_any_call("DhwTimeProgComfortTemp", 50.0, zone=0)
+    mock_set_data_item.assert_any_call("DhwTimeProgEconomyTemp", 44.0, zone=0)
+    mock_set_data_item.assert_any_call("DhwTimeProgComfortTemp", 51.0, zone=0)
+    mock_set_data_item.assert_any_call("DhwTimeProgEconomyTemp", 43.0, zone=0)
+    assert mock_set_data_item.call_count == 4
+
+
+def test_set_dhw_temperature_data_item_first_prefers_data_items(client_data_item_first):
+    """data_item_first strategy should not call bsbPlantData path on success."""
+    with patch.object(client_data_item_first, "set_data_item") as mock_set_data_item, patch.object(client_data_item_first, "_set_dhw_temperature_via_bsb_plantdata") as mock_bsb:
+        client_data_item_first.set_dhw_temperature(comfort=49.0, reduced=41.0)
+
+    mock_bsb.assert_not_called()
+    mock_set_data_item.assert_any_call("DhwTimeProgComfortTemp", 49.0, zone=0)
+    mock_set_data_item.assert_any_call("DhwTimeProgEconomyTemp", 41.0, zone=0)
+
+
+def test_set_dhw_temperature_data_item_first_falls_back_to_bsb(client_data_item_first):
+    """data_item_first strategy should fallback to bsbPlantData when data item writes fail."""
+    with patch.object(client_data_item_first, "_set_dhw_temperature_via_data_items") as mock_items, patch.object(client_data_item_first, "_set_dhw_temperature_via_bsb_plantdata") as mock_bsb:
+        mock_items.side_effect = RemoconConnectionError("temporary failure")
+
+        client_data_item_first.set_dhw_temperature(comfort=49.0, reduced=41.0)
+
+    mock_items.assert_called_once_with(49.0, 41.0)
+    mock_bsb.assert_called_once_with(49.0, 41.0)
 
 
 @patch("custom_components.elco_remocon.api.requests.Session")
