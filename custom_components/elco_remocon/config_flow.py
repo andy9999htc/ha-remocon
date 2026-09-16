@@ -38,7 +38,7 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
         """Get options flow for this handler."""
-        return ElcoRemoconOptionsFlow(config_entry)
+        return ElcoRemoconOptionsFlow()
 
     def _build_user_schema(self, defaults: dict[str, Any]) -> vol.Schema:
         return vol.Schema({
