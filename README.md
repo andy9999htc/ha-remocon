@@ -15,6 +15,17 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.8
+
+- Aligned the Remocon options flow with the current Home Assistant `OptionsFlow` pattern by removing custom `__init__` handling.
+- The options flow now reads the active config entry via `self.config_entry` during `async_step_init`, matching the current Home Assistant developer documentation and core implementation.
+- This avoids compatibility issues across Home Assistant variants where `config_entry` is framework-managed and not reliably available for assignment or constructor injection.
+
+### v0.2.7
+
+- Fixed Remocon options flow compatibility with Home Assistant variants where the options flow base class does not accept `config_entry` in `__init__`.
+- Switched the integration options flow to use an internal config entry reference, restoring the Configure dialog across the affected HA versions.
+
 ### v0.2.6
 
 - Fixed the Home Assistant options flow initialization for newer HA versions where `OptionsFlow.config_entry` is managed by the framework.
