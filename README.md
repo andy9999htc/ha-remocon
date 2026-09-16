@@ -15,6 +15,11 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.6
+
+- Fixed the Home Assistant options flow initialization for newer HA versions where `OptionsFlow.config_entry` is managed by the framework.
+- Restored the ability to open and save Remocon integration options, including the DHW write strategy setting.
+
 ### v0.2.5
 
 - Added configurable DHW write strategy (`bsb_plantdata_first` or `data_item_first`) in setup and options flow.
