@@ -11,12 +11,16 @@ from urllib.parse import quote
 import requests
 
 from .const import (
+    DEFAULT_DHW_WRITE_STRATEGY,
     DEFAULT_ERROR_LOG_AFTER_FAILURES,
     DEFAULT_READ_STRATEGY,
+    DHW_WRITE_STRATEGIES,
     MODE_AUTOMATIC,
     MODE_COMFORT,
     MODE_PROTECTION,
     MODE_REDUCTION,
+    DHW_WRITE_STRATEGY_BSB_PLANTDATA_FIRST,
+    DHW_WRITE_STRATEGY_DATA_ITEM_FIRST,
     READ_STRATEGY_BSB_FIRST,
     READ_STRATEGY_BSB_ONLY,
     READ_STRATEGIES,
@@ -162,6 +166,7 @@ class RemoconClient:
         zone: str = "1",
         features_payload: Optional[dict[str, Any]] = None,
         read_strategy: str = DEFAULT_READ_STRATEGY,
+        dhw_write_strategy: str = DEFAULT_DHW_WRITE_STRATEGY,
     ) -> None:
         self._email = email
         self._password = password
@@ -169,9 +174,49 @@ class RemoconClient:
         self._zone = zone
         self._features_payload = _build_features_payload(zone, features_payload)
         self._read_strategy = read_strategy if read_strategy in READ_STRATEGIES else DEFAULT_READ_STRATEGY
+        self._dhw_write_strategy = (
+            dhw_write_strategy
+            if dhw_write_strategy in DHW_WRITE_STRATEGIES
+            else DEFAULT_DHW_WRITE_STRATEGY
+        )
         self._session: Optional[requests.Session] = None
         self._consecutive_request_failures = 0
         self._error_log_after_failures = DEFAULT_ERROR_LOG_AFTER_FAILURES
+        self._use_data_items_for_dhw_temperature = False
+
+    def _set_dhw_temperature_via_data_items(
+        self,
+        comfort: float | None,
+        reduced: float | None,
+    ) -> None:
+        if comfort is not None:
+            self.set_data_item("DhwTimeProgComfortTemp", float(comfort), zone=0)
+        if reduced is not None:
+            self.set_data_item("DhwTimeProgEconomyTemp", float(reduced), zone=0)
+
+    def _set_dhw_temperature_via_bsb_plantdata(
+        self,
+        comfort: float | None,
+        reduced: float | None,
+    ) -> None:
+        raw = self._get_raw()
+        if not isinstance(raw, dict):
+            raw = {}
+        plant = raw.get("plantData") or {}
+        dhw_comf = plant.get("dhwComfortTemp") or {}
+        dhw_red = plant.get("dhwReducedTemp") or {}
+        old_comf = float(dhw_comf.get("value", 0))
+        old_econ = float(dhw_red.get("value", 0))
+
+        new_comf = comfort if comfort is not None else old_comf
+        new_econ = reduced if reduced is not None else old_econ
+
+        path = f"/api/v2/remote/bsbPlantData/{self._gateway_id}/dhwTemp"
+        payload = {
+            "new": {"comf": new_comf, "econ": new_econ},
+            "old": {"comf": old_comf, "econ": old_econ},
+        }
+        self._request("POST", path, json=payload)
 
     def login(self) -> None:
         """Authenticate and store session cookie."""
@@ -607,23 +652,38 @@ class RemoconClient:
         self, comfort: float | None = None, reduced: float | None = None
     ) -> None:
         """Set DHW temperatures."""
-        raw = self._get_raw()
-        if not isinstance(raw, dict):
-            raw = {}
-        plant = raw.get("plantData") or {}
-        dhw_comf = plant.get("dhwComfortTemp") or {}
-        dhw_red = plant.get("dhwReducedTemp") or {}
-        old_comf = float(dhw_comf.get("value", 0))
-        old_econ = float(dhw_red.get("value", 0))
+        if comfort is None and reduced is None:
+            raise RemoconDataError("At least one of comfort/reduced must be provided")
 
-        new_comf = comfort if comfort is not None else old_comf
-        new_econ = reduced if reduced is not None else old_econ
+        if self._use_data_items_for_dhw_temperature:
+            self._set_dhw_temperature_via_data_items(comfort, reduced)
+            return
 
-        path = f"/api/v2/remote/bsbPlantData/{self._gateway_id}/dhwTemp"
-        self._request("POST", path, json={
-            "new": {"comf": new_comf, "econ": new_econ},
-            "old": {"comf": old_comf, "econ": old_econ},
-        })
+        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_DATA_ITEM_FIRST:
+            first = self._set_dhw_temperature_via_data_items
+            second = self._set_dhw_temperature_via_bsb_plantdata
+            first_name = "data items"
+            second_name = "bsbPlantData"
+        else:
+            first = self._set_dhw_temperature_via_bsb_plantdata
+            second = self._set_dhw_temperature_via_data_items
+            first_name = "bsbPlantData"
+            second_name = "data items"
+
+        try:
+            first(comfort, reduced)
+            return
+        except RemoconConnectionError as err:
+            if first_name == "bsbPlantData" and "500" in str(err):
+                self._use_data_items_for_dhw_temperature = True
+            _LOGGER.info(
+                "Primary DHW temperature write via %s failed; falling back to %s: %s",
+                first_name,
+                second_name,
+                err,
+            )
+
+        second(comfort, reduced)
 
     def set_dhw_mode(self, mode: int) -> None:
         """Set DHW mode."""

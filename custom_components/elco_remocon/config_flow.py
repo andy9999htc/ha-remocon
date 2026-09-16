@@ -14,12 +14,15 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .api import RemoconAuthError, RemoconClient, RemoconConnectionError, RemoconDataError
 from .const import (
+    CONF_DHW_WRITE_STRATEGY,
     CONF_FEATURES_PAYLOAD,
     CONF_GATEWAY_ID,
     CONF_READ_STRATEGY,
     CONF_ZONE,
+    DEFAULT_DHW_WRITE_STRATEGY,
     DEFAULT_READ_STRATEGY,
     DEFAULT_ZONE,
+    DHW_WRITE_STRATEGIES,
     DOMAIN,
     READ_STRATEGIES,
 )
@@ -44,6 +47,10 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_GATEWAY_ID, default=defaults.get(CONF_GATEWAY_ID, "")): str,
             vol.Optional(CONF_ZONE, default=defaults.get(CONF_ZONE, DEFAULT_ZONE)): str,
             vol.Optional(CONF_READ_STRATEGY, default=defaults.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY)): vol.In(READ_STRATEGIES),
+            vol.Optional(
+                CONF_DHW_WRITE_STRATEGY,
+                default=defaults.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
+            ): vol.In(DHW_WRITE_STRATEGIES),
             vol.Optional(CONF_FEATURES_PAYLOAD, default=defaults.get(CONF_FEATURES_PAYLOAD, "")): str,
         })
 
@@ -73,6 +80,7 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_GATEWAY_ID: user_input.get(CONF_GATEWAY_ID, ""),
                         CONF_ZONE: user_input.get(CONF_ZONE, DEFAULT_ZONE),
                         CONF_READ_STRATEGY: user_input.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
+                        CONF_DHW_WRITE_STRATEGY: user_input.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
                         CONF_FEATURES_PAYLOAD: features_raw,
                     }),
                     errors=errors,
@@ -86,6 +94,7 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     zone=user_input.get(CONF_ZONE, DEFAULT_ZONE),
                     features_payload=features_payload,
                     read_strategy=user_input.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
+                    dhw_write_strategy=user_input.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
                 )
                 await self.hass.async_add_executor_job(client.login)
                 # Verify we can actually get data
@@ -112,6 +121,7 @@ class ElcoRemoconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_GATEWAY_ID: user_input[CONF_GATEWAY_ID],
                     CONF_ZONE: user_input.get(CONF_ZONE, DEFAULT_ZONE),
                     CONF_READ_STRATEGY: user_input.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
+                    CONF_DHW_WRITE_STRATEGY: user_input.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
                 }
                 if features_payload is not None:
                     entry_data[CONF_FEATURES_PAYLOAD] = features_payload
@@ -143,17 +153,32 @@ class ElcoRemoconOptionsFlow(config_entries.OptionsFlow):
                         CONF_READ_STRATEGY,
                         self.config_entry.data.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
                     ),
-                )
+                ),
+                CONF_DHW_WRITE_STRATEGY: user_input.get(
+                    CONF_DHW_WRITE_STRATEGY,
+                    self.config_entry.options.get(
+                        CONF_DHW_WRITE_STRATEGY,
+                        self.config_entry.data.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
+                    ),
+                ),
             })
 
         current_strategy = self.config_entry.options.get(
             CONF_READ_STRATEGY,
             self.config_entry.data.get(CONF_READ_STRATEGY, DEFAULT_READ_STRATEGY),
         )
+        current_dhw_write_strategy = self.config_entry.options.get(
+            CONF_DHW_WRITE_STRATEGY,
+            self.config_entry.data.get(CONF_DHW_WRITE_STRATEGY, DEFAULT_DHW_WRITE_STRATEGY),
+        )
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Optional(CONF_READ_STRATEGY, default=current_strategy): vol.In(READ_STRATEGIES),
+                vol.Optional(
+                    CONF_DHW_WRITE_STRATEGY,
+                    default=current_dhw_write_strategy,
+                ): vol.In(DHW_WRITE_STRATEGIES),
             }),
         )

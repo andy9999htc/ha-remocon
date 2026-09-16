@@ -10,12 +10,14 @@
           "gateway_id": "Gateway ID",
           "zone": "Zone",
           "read_strategy": "Lese-Strategie",
+          "dhw_write_strategy": "Warmwasser-Schreibstrategie",
           "features_payload": "Custom-Features-Payload (JSON, optional)"
         }
       },
       "init": {
         "data": {
-          "read_strategy": "Lese-Strategie"
+          "read_strategy": "Lese-Strategie",
+          "dhw_write_strategy": "Warmwasser-Schreibstrategie"
         }
       }
     },
@@ -25,7 +27,8 @@
           "title": "Erweiterte Optionen",
           "description": "API-Leseverhalten fuer modellspezifische Kompatibilitaet anpassen.",
           "data": {
-            "read_strategy": "Lese-Strategie"
+            "read_strategy": "Lese-Strategie",
+            "dhw_write_strategy": "Warmwasser-Schreibstrategie"
           }
         }
       }
@@ -43,6 +46,12 @@
           "bsb_first": "BSB zuerst, Legacy als Fallback",
           "legacy_only": "Nur Legacy",
           "bsb_only": "Nur BSB"
+        }
+      },
+      "dhw_write_strategy": {
+        "options": {
+          "bsb_plantdata_first": "bsbPlantData zuerst, DataItems als Fallback",
+          "data_item_first": "DataItems zuerst, bsbPlantData als Fallback"
         }
       }
     }

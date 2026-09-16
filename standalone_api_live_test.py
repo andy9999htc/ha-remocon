@@ -10,9 +10,29 @@ Usage (PowerShell):
 
 Optional write test (set_data_item):
     $env:REMO_RUN_WRITE="1"
+    $env:REMO_RUN_DATA_ITEM_WRITE="1"
     $env:REMO_ITEM_ID="ChFlowSetpointTemp"
     $env:REMO_ITEM_VALUE="28.0"
     $env:REMO_ITEM_ZONE="0"
+    python standalone_api_live_test.py
+
+Optional DHW comfort/reduced write test (uses set_dhw_temperature and fallback logic):
+    $env:REMO_RUN_WRITE="1"
+    $env:REMO_RUN_DHW_WRITE="1"
+    $env:REMO_DHW_COMFORT="52"
+    $env:REMO_DHW_REDUCED="45"
+    python standalone_api_live_test.py
+
+Optional DHW write strategy override:
+    $env:REMO_DHW_WRITE_STRATEGY="data_item_first"
+    # or: bsb_plantdata_first
+    python standalone_api_live_test.py
+
+Optional forced fallback test for the configured DHW write strategy:
+    $env:REMO_RUN_WRITE="1"
+    $env:REMO_RUN_DHW_WRITE="1"
+    $env:REMO_DHW_WRITE_STRATEGY="data_item_first"
+    $env:REMO_FORCE_DHW_PRIMARY_FAILURE="1"
     python standalone_api_live_test.py
 
 Enable debug output:
@@ -55,7 +75,7 @@ SELECTED_LEGACY_ITEMS = [
 ]
 
 
-def _load_api_symbols() -> tuple[type, object, object]:
+def _load_api_symbols() -> tuple[type, object, object, type]:
     """Load API symbols directly from source files, bypassing HA package imports."""
     repo_root = pathlib.Path(__file__).resolve().parent
     package_root = repo_root / "custom_components" / "elco_remocon"
@@ -92,10 +112,11 @@ def _load_api_symbols() -> tuple[type, object, object]:
         api_module.RemoconClient,
         api_module._build_features_payload,
         api_module.RemoconApiError,
+        api_module.RemoconConnectionError,
     )
 
 
-RemoconClient, _build_features_payload, RemoconApiError = _load_api_symbols()
+RemoconClient, _build_features_payload, RemoconApiError, RemoconConnectionError = _load_api_symbols()
 
 
 def _debug_enabled() -> bool:
@@ -172,6 +193,13 @@ def _coerce_value(raw: str) -> Any:
         return raw
 
 
+def _optional_float_env(name: str) -> float | None:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return None
+    return float(raw)
+
+
 def _enable_request_debug(client: Any) -> None:
     """Wrap the client request method to print request/response diagnostics."""
     original_request = client._request
@@ -191,6 +219,46 @@ def _enable_request_debug(client: Any) -> None:
         return response
 
     client._request = _wrapped_request
+
+
+def _force_dhw_primary_failure_enabled() -> bool:
+    return os.getenv("REMO_FORCE_DHW_PRIMARY_FAILURE", "0") == "1"
+
+
+def _run_set_dhw_temperature_with_optional_forced_fallback(
+    client: Any,
+    comfort: float | None,
+    reduced: float | None,
+) -> None:
+    if not _force_dhw_primary_failure_enabled():
+        client.set_dhw_temperature(comfort=comfort, reduced=reduced)
+        return
+
+    if getattr(client, "_dhw_write_strategy", "bsb_plantdata_first") == "data_item_first":
+        primary_method_name = "_set_dhw_temperature_via_data_items"
+        secondary_label = "bsbPlantData"
+        primary_label = "data items"
+    else:
+        primary_method_name = "_set_dhw_temperature_via_bsb_plantdata"
+        secondary_label = "data items"
+        primary_label = "bsbPlantData"
+
+    original_primary = getattr(client, primary_method_name)
+
+    def _forced_failure(comfort_value: float | None, reduced_value: float | None) -> None:
+        raise RemoconConnectionError(
+            f"Forced primary failure for standalone fallback test via {primary_label}"
+        )
+
+    print(
+        "    [INFO] Forcing primary DHW write failure to exercise fallback: "
+        f"{primary_label} -> {secondary_label}"
+    )
+    setattr(client, primary_method_name, _forced_failure)
+    try:
+        client.set_dhw_temperature(comfort=comfort, reduced=reduced)
+    finally:
+        setattr(client, primary_method_name, original_primary)
 
 
 def _has_expected_raw_data(raw: Any) -> bool:
@@ -356,6 +424,7 @@ def main() -> int:
     password = _required_env("REMO_PASSWORD")
     gateway_id = _required_env("REMO_GATEWAY_ID")
     zone = os.getenv("REMO_ZONE", "1")
+    dhw_write_strategy = os.getenv("REMO_DHW_WRITE_STRATEGY", "bsb_plantdata_first")
 
     custom_features = _parse_features(zone)
 
@@ -365,12 +434,18 @@ def main() -> int:
         gateway_id=gateway_id,
         zone=zone,
         features_payload=custom_features,
+        dhw_write_strategy=dhw_write_strategy,
     )
 
     if _debug_enabled():
         _enable_request_debug(client)
         _debug("Debug mode enabled")
-        _debug(f"gateway_id={gateway_id}, zone={zone}, custom_features={custom_features is not None}")
+        _debug(
+            f"gateway_id={gateway_id}, zone={zone}, "
+            f"custom_features={custom_features is not None}, "
+            f"dhw_write_strategy={dhw_write_strategy}, "
+            f"force_dhw_primary_failure={_force_dhw_primary_failure_enabled()}"
+        )
 
     print("[1/5] Logging in...")
     client.login()
@@ -418,16 +493,61 @@ def main() -> int:
     finally:
         client._get_raw_bsb = original_bsb
 
+    print("[5/5] Testing optional write paths...")
+
     run_write = os.getenv("REMO_RUN_WRITE", "0") == "1"
-    if run_write:
-        print("[5/5] Testing set_data_item with real write call...")
+    run_data_item_write_requested = os.getenv("REMO_RUN_DATA_ITEM_WRITE", "0") == "1"
+    run_data_item_write = run_write and run_data_item_write_requested
+    if run_data_item_write:
+        print("  - set_data_item write test enabled")
         item_id = _required_env("REMO_ITEM_ID")
         item_value = _coerce_value(_required_env("REMO_ITEM_VALUE"))
         item_zone = int(os.getenv("REMO_ITEM_ZONE", "0"))
         client.set_data_item(item_id, item_value, zone=item_zone)
-        print(f"[OK] set_data_item succeeded for item={item_id}, value={item_value}, zone={item_zone}")
+        print(f"    [OK] set_data_item succeeded for item={item_id}, value={item_value}, zone={item_zone}")
     else:
-        print("[5/5] Skipping set_data_item write test (set REMO_RUN_WRITE=1 to enable)")
+        if run_data_item_write_requested and not run_write:
+            print(
+                "  - set_data_item write test skipped "
+                "(set REMO_RUN_WRITE=1 and REMO_RUN_DATA_ITEM_WRITE=1 to enable)"
+            )
+        else:
+            print("  - set_data_item write test skipped (set REMO_RUN_DATA_ITEM_WRITE=1 to enable)")
+
+    run_dhw_write_requested = os.getenv("REMO_RUN_DHW_WRITE", "0") == "1"
+    run_dhw_write = run_write and run_dhw_write_requested
+    if run_dhw_write:
+        comfort = _optional_float_env("REMO_DHW_COMFORT")
+        reduced = _optional_float_env("REMO_DHW_REDUCED")
+        if comfort is None and reduced is None:
+            raise RuntimeError("REMO_RUN_DHW_WRITE=1 requires REMO_DHW_COMFORT and/or REMO_DHW_REDUCED")
+
+        print(
+            "  - set_dhw_temperature write test enabled "
+            f"(comfort={comfort}, reduced={reduced}, strategy={dhw_write_strategy})"
+        )
+        _run_set_dhw_temperature_with_optional_forced_fallback(
+            client,
+            comfort,
+            reduced,
+        )
+        print("    [OK] set_dhw_temperature call succeeded")
+
+        refreshed = client.get_data()
+        print(
+            "    [INFO] post-write get_data: "
+            f"dhw_set_temp={refreshed.dhw_set_temp}, "
+            f"dhw_comfort_temp={refreshed.dhw_comfort_temp}, "
+            f"dhw_reduced_temp={refreshed.dhw_reduced_temp}"
+        )
+    else:
+        if run_dhw_write_requested and not run_write:
+            print(
+                "  - set_dhw_temperature write test skipped "
+                "(set REMO_RUN_WRITE=1 and REMO_RUN_DHW_WRITE=1 to enable)"
+            )
+        else:
+            print("  - set_dhw_temperature write test skipped (set REMO_RUN_DHW_WRITE=1 to enable)")
 
     print("\nAll requested live checks completed.")
     return 0
