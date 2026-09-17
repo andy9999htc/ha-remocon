@@ -15,6 +15,10 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 - No unreleased changes yet.
 
+### v0.2.10
+
+- Bumped the release version to prepare the next tag and verify the Windows release workflow.
+
 ### v0.2.9
 
 - Fixed the Remocon options flow factory to instantiate the options flow without passing `config_entry`, matching the current Home Assistant `OptionsFlow` API.
@@ -418,6 +422,22 @@ The integration uses the same API as the Elco Remocon-Net web app:
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+### Release workflow
+
+After merging to `main`, run the release script from the repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\release.ps1
+```
+
+Or use the Windows wrapper:
+
+```cmd
+release.bat
+```
+
+The script reads the version from `custom_components/elco_remocon/manifest.json`, creates the matching git tag, pushes it to `origin`, and publishes a GitHub release using the matching `### vX.Y.Z` section from this changelog.
 
 ## License
 
