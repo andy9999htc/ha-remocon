@@ -26,6 +26,27 @@ function Resolve-GhCommand {
     throw 'gh is required (install GitHub CLI and run gh auth login)'
 }
 
+function Resolve-GitHubRepoSlug {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RemoteUrl
+    )
+
+    $patterns = @(
+        '^https?://github\.com/(?<owner>[^/]+)/(?<repo>[^/]+?)(?:\.git)?/?$',
+        '^git@github\.com:(?<owner>[^/]+)/(?<repo>[^/]+?)(?:\.git)?$'
+    )
+
+    foreach ($pattern in $patterns) {
+        $match = [regex]::Match($RemoteUrl, $pattern)
+        if ($match.Success) {
+            return '{0}/{1}' -f $match.Groups['owner'].Value, $match.Groups['repo'].Value
+        }
+    }
+
+    throw "Could not derive a GitHub repo slug from origin URL: $RemoteUrl"
+}
+
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'git is required'
 }
@@ -56,6 +77,9 @@ Set-Location $repoRoot
 if (-not (git remote get-url origin 2>$null)) {
     throw "git remote 'origin' is missing"
 }
+
+$originUrl = git remote get-url origin
+$repoSlug = Resolve-GitHubRepoSlug -RemoteUrl $originUrl
 
 $currentBranch = git branch --show-current
 if ($currentBranch -ne 'main') {
@@ -114,7 +138,7 @@ try {
 
     git tag -a $tag -m "Release $tag"
     git push origin $tag
-    & $ghCommand release create $tag --title $tag --notes-file $notesFile
+    & $ghCommand release create $tag --repo $repoSlug --title $tag --notes-file $notesFile
 
     Write-Host "Created and pushed $tag and published GitHub release."
 }
