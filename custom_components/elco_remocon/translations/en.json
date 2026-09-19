@@ -60,6 +60,12 @@
     "number": {
       "dhw_set_temperature": {
         "name": "DHW Set Temperature"
+      },
+      "dhw_comfort_temperature": {
+        "name": "DHW Comfort Temperature"
+      },
+      "dhw_reduced_temperature": {
+        "name": "DHW Reduced Temperature"
       }
     },
     "select": {

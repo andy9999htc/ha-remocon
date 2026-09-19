@@ -60,6 +60,12 @@
     "number": {
       "dhw_set_temperature": {
         "name": "Warmwasser Solltemperatur"
+      },
+      "dhw_comfort_temperature": {
+        "name": "Warmwasser Komforttemperatur"
+      },
+      "dhw_reduced_temperature": {
+        "name": "Warmwasser Reduzierte Temperatur"
       }
     },
     "select": {

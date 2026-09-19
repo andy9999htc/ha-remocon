@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities([ElcoPlantModeSelect(coordinator, entry)])
 
 
-class ElcoPlantModeSelect(CoordinatorEntity[ElcoRemoconCoordinator], SelectEntity):
+class ElcoPlantModeSelect(CoordinatorEntity, SelectEntity):
     """Writable PlantMode selector."""
 
     _attr_has_entity_name = True

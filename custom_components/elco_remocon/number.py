@@ -19,14 +19,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elco number entities."""
     coordinator: ElcoRemoconCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ElcoDhwSetTemperatureNumber(coordinator, entry)])
+    async_add_entities([
+        ElcoDhwSetTemperatureNumber(coordinator, entry),
+        ElcoDhwComfortTemperatureNumber(coordinator, entry),
+        ElcoDhwReducedTemperatureNumber(coordinator, entry),
+    ])
 
 
-class ElcoDhwSetTemperatureNumber(CoordinatorEntity[ElcoRemoconCoordinator], NumberEntity):
-    """Writable DHW setpoint temperature."""
+class _BaseDhwTemperatureNumber(CoordinatorEntity, NumberEntity):
+    """Shared DHW temperature number entity."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "dhw_set_temperature"
     _attr_native_min_value = 35.0
     _attr_native_max_value = 65.0
     _attr_native_step = 1.0
@@ -35,13 +38,23 @@ class ElcoDhwSetTemperatureNumber(CoordinatorEntity[ElcoRemoconCoordinator], Num
     def __init__(self, coordinator: ElcoRemoconCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         gw_id = entry.data["gateway_id"]
-        self._attr_unique_id = f"{gw_id}_dhw_set_temperature"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, gw_id)},
             "name": "Remocon-Net Heat Pump",
             "manufacturer": "Elco",
             "model": "Aerotop SPK",
         }
+
+
+class ElcoDhwSetTemperatureNumber(_BaseDhwTemperatureNumber):
+    """Writable DHW setpoint temperature."""
+
+    _attr_translation_key = "dhw_set_temperature"
+
+    def __init__(self, coordinator: ElcoRemoconCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry)
+        gw_id = entry.data["gateway_id"]
+        self._attr_unique_id = f"{gw_id}_dhw_set_temperature"
 
     @property
     def native_value(self) -> float | None:
@@ -55,6 +68,54 @@ class ElcoDhwSetTemperatureNumber(CoordinatorEntity[ElcoRemoconCoordinator], Num
     async def async_set_native_value(self, value: float) -> None:
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_dhw_set_temp,
+            float(value),
+        )
+        await self.coordinator.async_request_refresh()
+
+
+class ElcoDhwComfortTemperatureNumber(_BaseDhwTemperatureNumber):
+    """Writable DHW comfort temperature."""
+
+    _attr_translation_key = "dhw_comfort_temperature"
+
+    def __init__(self, coordinator: ElcoRemoconCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry)
+        gw_id = entry.data["gateway_id"]
+        self._attr_unique_id = f"{gw_id}_dhw_comfort_temperature"
+
+    @property
+    def native_value(self) -> float | None:
+        value = self.coordinator.data.dhw_comfort_temp
+        return value if value > 0 else None
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.hass.async_add_executor_job(
+            self.coordinator.client.set_dhw_temperature,
+            float(value),
+            None,
+        )
+        await self.coordinator.async_request_refresh()
+
+
+class ElcoDhwReducedTemperatureNumber(_BaseDhwTemperatureNumber):
+    """Writable DHW reduced temperature."""
+
+    _attr_translation_key = "dhw_reduced_temperature"
+
+    def __init__(self, coordinator: ElcoRemoconCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry)
+        gw_id = entry.data["gateway_id"]
+        self._attr_unique_id = f"{gw_id}_dhw_reduced_temperature"
+
+    @property
+    def native_value(self) -> float | None:
+        value = self.coordinator.data.dhw_reduced_temp
+        return value if value > 0 else None
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.hass.async_add_executor_job(
+            self.coordinator.client.set_dhw_temperature,
+            None,
             float(value),
         )
         await self.coordinator.async_request_refresh()

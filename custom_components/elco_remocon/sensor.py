@@ -113,7 +113,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ElcoSensor(CoordinatorEntity[ElcoRemoconCoordinator], SensorEntity):
+class ElcoSensor(CoordinatorEntity, SensorEntity):
     """Elco sensor entity."""
 
     _attr_has_entity_name = True
