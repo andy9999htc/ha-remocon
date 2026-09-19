@@ -2,6 +2,7 @@
 
 import json
 import logging
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,6 +14,10 @@ from custom_components.elco_remocon.api import (
     RemoconConnectionError,
     RemoconDataError,
     _build_features_payload,
+)
+from custom_components.elco_remocon.number import (
+    ElcoDhwComfortTemperatureNumber,
+    ElcoDhwReducedTemperatureNumber,
 )
 from custom_components.elco_remocon.const import (
     DHW_WRITE_STRATEGY_DATA_ITEM_FIRST,
@@ -282,6 +287,21 @@ def test_get_data_from_legacy_items(mock_session_class, client, mock_legacy_item
     assert data.plant_mode == 3
     assert data.system_pressure == 1.5
     assert data.flow_temperature == 25.0
+
+
+def test_dhw_comfort_and_reduced_numbers_expose_current_values():
+    """DHW comfort/reduced values should be readable as number entities."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(dhw_comfort_temp=55.0, dhw_reduced_temp=47.0),
+        client=MagicMock(),
+    )
+    entry = SimpleNamespace(data={"gateway_id": "gw-test"})
+
+    comfort = ElcoDhwComfortTemperatureNumber(coordinator, entry)
+    reduced = ElcoDhwReducedTemperatureNumber(coordinator, entry)
+
+    assert comfort.native_value == 55.0
+    assert reduced.native_value == 47.0
 
 
 def test_set_dhw_set_temp_uses_data_item(client):

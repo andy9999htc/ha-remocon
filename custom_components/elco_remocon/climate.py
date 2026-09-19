@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities([ElcoClimateEntity(coordinator, entry)])
 
 
-class ElcoClimateEntity(CoordinatorEntity[ElcoRemoconCoordinator], ClimateEntity):
+class ElcoClimateEntity(CoordinatorEntity, ClimateEntity):
     """Climate entity for the Elco heat pump zone."""
 
     _attr_has_entity_name = True

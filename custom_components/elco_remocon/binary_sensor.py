@@ -75,7 +75,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ElcoBinarySensor(CoordinatorEntity[ElcoRemoconCoordinator], BinarySensorEntity):
+class ElcoBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Elco binary sensor entity."""
 
     _attr_has_entity_name = True
