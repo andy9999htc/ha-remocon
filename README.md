@@ -13,6 +13,10 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ### Unreleased
 
+- No unreleased changes yet.
+
+### v0.2.11
+
 - Added DHW comfort and reduced temperature readback as HA number entities, so the current values can be read in Home Assistant in addition to writing them.
 - Extended the live standalone API test to validate DHW comfort/reduced writes and confirm the post-write readback values from `get_data()`.
 - Updated the entity base usage to the current Home Assistant compatibility pattern, avoiding the generic `CoordinatorEntity[...]` metaclass issue seen on newer HA versions.
@@ -174,6 +178,8 @@ After setup, the following entities are created:
 | `sensor.flow_temperature` | Sensor | Flow temperature |
 | `sensor.system_pressure` | Sensor | System pressure (bar) |
 | `number.dhw_set_temperature` | Number | Writable DHW setpoint temperature |
+| `number.dhw_comfort_temperature` | Number | Read/write DHW comfort temperature |
+| `number.dhw_reduced_temperature` | Number | Read/write DHW reduced temperature |
 | `select.plant_mode` | Select | Writable plant mode (`Summer/Winter/Heating only/Cooling/OFF`) |
 | `binary_sensor.heating_active` | Binary | Heating is active |
 | `binary_sensor.cooling_active` | Binary | Cooling is active |
