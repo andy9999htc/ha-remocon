@@ -11,9 +11,12 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ## Changelog
 
-### Unreleased
+### v0.2.12
 
-- No unreleased changes yet.
+- Renamed DHW write strategy values to `data_item` and `bsb_plantdata` and removed the automatic fallback behavior so the configured route is used strictly.
+- Default DHW write strategy is now `data_item`.
+- Updated the standalone live test script and README examples to match the strict, no-fallback configuration.
+- Added the Remocon-style repository and integration icon assets for HACS branding.
 
 ### v0.2.11
 
@@ -134,7 +137,7 @@ Restart Home Assistant.
    - **Gateway ID:** Your system's gateway ID (see below)
    - **Zone:** Heating zone (default: 1)
    - **Read strategy:** API read order/selection (default: `legacy_first`)
-   - **DHW write strategy:** write order for DHW comfort/reduced (`bsb_plantdata_first` default)
+   - **DHW write strategy:** configured DHW write path for comfort/reduced (`data_item` default)
    - **Custom features payload (JSON, optional):** For model-specific API features
 
 ### Read strategy options
@@ -152,8 +155,10 @@ You can change this later via **Settings → Devices & Services → Remocon-Net 
 
 The integration supports selectable DHW write strategies for `set_dhw_temperature`:
 
-- `bsb_plantdata_first` (default): write via `bsbPlantData/.../dhwTemp` first, fallback to data items
-- `data_item_first`: write `DhwTimeProgComfortTemp`/`DhwTimeProgEconomyTemp` first, fallback to `bsbPlantData/.../dhwTemp`
+- `data_item` (default): write `DhwTimeProgComfortTemp`/`DhwTimeProgEconomyTemp`
+- `bsb_plantdata`: write via `bsbPlantData/.../dhwTemp`
+
+There is no automatic fallback between these two routes. If the configured write path fails, the error is raised and no second write path is attempted.
 
 You can change this later via **Settings → Devices & Services → Remocon-Net → Configure** (options flow).
 
@@ -259,8 +264,7 @@ Default behavior:
 - Logs in
 - Tests direct legacy read path
 - Runs read checks (`get_data`)
-- Exercises fallback logic (forces empty BSB result and verifies legacy endpoint data)
-- Prints selected legacy/fallback values for key items
+- Prints selected values for key items
 - Skips write test unless explicitly enabled
 
 PowerShell example:
@@ -283,7 +287,7 @@ $env:REMO_ITEM_ZONE="0"
 python standalone_api_live_test.py
 ```
 
-Optional DHW comfort/reduced write test (`set_dhw_temperature`, includes fallback behavior for models that reject the primary endpoint):
+Optional DHW comfort/reduced write test (`set_dhw_temperature` with the configured strategy):
 
 ```powershell
 $env:REMO_RUN_WRITE="1"
@@ -296,24 +300,24 @@ python standalone_api_live_test.py
 Optional DHW write strategy override for the live script:
 
 ```powershell
-$env:REMO_DHW_WRITE_STRATEGY="data_item_first"
-# or: bsb_plantdata_first
+$env:REMO_DHW_WRITE_STRATEGY="data_item"
+# or: bsb_plantdata
 python standalone_api_live_test.py
 ```
 
-Optional forced fallback test for the configured DHW write strategy:
+Optional forced failure test for the configured DHW write strategy:
 
 ```powershell
 $env:REMO_RUN_WRITE="1"
 $env:REMO_RUN_DHW_WRITE="1"
-$env:REMO_DHW_WRITE_STRATEGY="data_item_first"
+$env:REMO_DHW_WRITE_STRATEGY="data_item"
 $env:REMO_FORCE_DHW_PRIMARY_FAILURE="1"
 python standalone_api_live_test.py
 ```
 
-This forces the configured primary DHW write method to fail inside the live script so that `set_dhw_temperature` exercises its secondary fallback path.
+This forces the configured primary DHW write method to fail inside the live script so that the script can be used to validate the strict no-fallback behavior.
 
-Note: if your model returns HTTP 500 on the primary `bsbPlantData/.../dhwTemp` write endpoint, the integration switches to DataItem writes for DHW comfort/reduced temperatures after the first failure in the current session. This avoids repeated 500 responses and speeds up subsequent writes.
+Note: the integration does not switch to the other DHW write route automatically. If the configured strategy fails, the call raises an error immediately.
 
 Optional custom features payload for live test:
 

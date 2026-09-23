@@ -50,8 +50,8 @@
       },
       "dhw_write_strategy": {
         "options": {
-          "bsb_plantdata_first": "bsbPlantData zuerst, DataItems als Fallback",
-          "data_item_first": "DataItems zuerst, bsbPlantData als Fallback"
+          "bsb_plantdata": "bsbPlantData",
+          "data_item": "DataItems"
         }
       }
     }

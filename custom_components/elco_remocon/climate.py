@@ -8,7 +8,7 @@ from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODE_AUTOMATIC, MODE_COMFORT, MODE_PROTECTION, MODE_REDUCTION
@@ -37,7 +37,7 @@ HVAC_ACTION_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elco climate entity."""
     coordinator: ElcoRemoconCoordinator = hass.data[DOMAIN][entry.entry_id]
