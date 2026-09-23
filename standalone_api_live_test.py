@@ -16,7 +16,7 @@ Optional write test (set_data_item):
     $env:REMO_ITEM_ZONE="0"
     python standalone_api_live_test.py
 
-Optional DHW comfort/reduced write test (uses set_dhw_temperature and fallback logic):
+Optional DHW comfort/reduced write test (uses set_dhw_temperature with the configured strategy):
     $env:REMO_RUN_WRITE="1"
     $env:REMO_RUN_DHW_WRITE="1"
     $env:REMO_DHW_COMFORT="52"
@@ -24,14 +24,14 @@ Optional DHW comfort/reduced write test (uses set_dhw_temperature and fallback l
     python standalone_api_live_test.py
 
 Optional DHW write strategy override:
-    $env:REMO_DHW_WRITE_STRATEGY="data_item_first"
-    # or: bsb_plantdata_first
+    $env:REMO_DHW_WRITE_STRATEGY="data_item"
+    # or: bsb_plantdata
     python standalone_api_live_test.py
 
-Optional forced fallback test for the configured DHW write strategy:
+Optional forced failure test for the configured DHW write strategy:
     $env:REMO_RUN_WRITE="1"
     $env:REMO_RUN_DHW_WRITE="1"
-    $env:REMO_DHW_WRITE_STRATEGY="data_item_first"
+    $env:REMO_DHW_WRITE_STRATEGY="data_item"
     $env:REMO_FORCE_DHW_PRIMARY_FAILURE="1"
     python standalone_api_live_test.py
 
@@ -234,7 +234,7 @@ def _run_set_dhw_temperature_with_optional_forced_fallback(
         client.set_dhw_temperature(comfort=comfort, reduced=reduced)
         return
 
-    if getattr(client, "_dhw_write_strategy", "bsb_plantdata_first") == "data_item_first":
+    if getattr(client, "_dhw_write_strategy", "bsb_plantdata") == "data_item":
         primary_method_name = "_set_dhw_temperature_via_data_items"
         secondary_label = "bsbPlantData"
         primary_label = "data items"
@@ -424,7 +424,7 @@ def main() -> int:
     password = _required_env("REMO_PASSWORD")
     gateway_id = _required_env("REMO_GATEWAY_ID")
     zone = os.getenv("REMO_ZONE", "1")
-    dhw_write_strategy = os.getenv("REMO_DHW_WRITE_STRATEGY", "bsb_plantdata_first")
+    dhw_write_strategy = os.getenv("REMO_DHW_WRITE_STRATEGY", "data_item")
 
     custom_features = _parse_features(zone)
 

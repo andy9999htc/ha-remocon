@@ -19,8 +19,8 @@ from .const import (
     MODE_COMFORT,
     MODE_PROTECTION,
     MODE_REDUCTION,
-    DHW_WRITE_STRATEGY_BSB_PLANTDATA_FIRST,
-    DHW_WRITE_STRATEGY_DATA_ITEM_FIRST,
+    DHW_WRITE_STRATEGY_BSB_PLANTDATA,
+    DHW_WRITE_STRATEGY_DATA_ITEM,
     READ_STRATEGY_BSB_FIRST,
     READ_STRATEGY_BSB_ONLY,
     READ_STRATEGIES,
@@ -182,7 +182,6 @@ class RemoconClient:
         self._session: Optional[requests.Session] = None
         self._consecutive_request_failures = 0
         self._error_log_after_failures = DEFAULT_ERROR_LOG_AFTER_FAILURES
-        self._use_data_items_for_dhw_temperature = False
 
     def _set_dhw_temperature_via_data_items(
         self,
@@ -651,39 +650,19 @@ class RemoconClient:
     def set_dhw_temperature(
         self, comfort: float | None = None, reduced: float | None = None
     ) -> None:
-        """Set DHW temperatures."""
+        """Set DHW temperatures using the configured strategy only."""
         if comfort is None and reduced is None:
             raise RemoconDataError("At least one of comfort/reduced must be provided")
 
-        if self._use_data_items_for_dhw_temperature:
+        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_DATA_ITEM:
             self._set_dhw_temperature_via_data_items(comfort, reduced)
             return
 
-        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_DATA_ITEM_FIRST:
-            first = self._set_dhw_temperature_via_data_items
-            second = self._set_dhw_temperature_via_bsb_plantdata
-            first_name = "data items"
-            second_name = "bsbPlantData"
-        else:
-            first = self._set_dhw_temperature_via_bsb_plantdata
-            second = self._set_dhw_temperature_via_data_items
-            first_name = "bsbPlantData"
-            second_name = "data items"
-
-        try:
-            first(comfort, reduced)
+        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_BSB_PLANTDATA:
+            self._set_dhw_temperature_via_bsb_plantdata(comfort, reduced)
             return
-        except RemoconConnectionError as err:
-            if first_name == "bsbPlantData" and "500" in str(err):
-                self._use_data_items_for_dhw_temperature = True
-            _LOGGER.info(
-                "Primary DHW temperature write via %s failed; falling back to %s: %s",
-                first_name,
-                second_name,
-                err,
-            )
 
-        second(comfort, reduced)
+        raise RemoconDataError(f"Unsupported DHW write strategy: {self._dhw_write_strategy}")
 
     def set_dhw_mode(self, mode: int) -> None:
         """Set DHW mode."""
