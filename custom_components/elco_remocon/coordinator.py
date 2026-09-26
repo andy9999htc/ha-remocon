@@ -5,14 +5,21 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import timedelta
+from typing import Any, Callable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import RemoconAuthError, RemoconClient, RemoconConnectionError, RemoconData
+from .api import (
+    RemoconApiError,
+    RemoconAuthError,
+    RemoconClient,
+    RemoconConnectionError,
+    RemoconData,
+)
 from .const import (
     CONF_DHW_WRITE_STRATEGY,
     CONF_FEATURES_PAYLOAD,
@@ -119,3 +126,28 @@ class ElcoRemoconCoordinator(DataUpdateCoordinator[RemoconData]):
             )
 
         raise UpdateFailed(f"Connection error: {last_connection_error}")
+
+    async def async_execute_write_operation(
+        self,
+        operation: str,
+        func: Callable[..., Any],
+        *args: Any,
+    ) -> Any:
+        """Execute a write operation and raise a concise user-facing error on failure."""
+        try:
+            return await self.hass.async_add_executor_job(func, *args)
+        except RemoconConnectionError as err:
+            _LOGGER.warning("Write operation failed (%s): %s", operation, err)
+            raise HomeAssistantError(
+                f"Operation failed: {operation}. Connection timeout/communication error: {err}"
+            ) from None
+        except RemoconApiError as err:
+            _LOGGER.warning("Write operation failed (%s): %s", operation, err)
+            raise HomeAssistantError(
+                f"Operation failed: {operation}. API error: {err}"
+            ) from None
+        except Exception as err:
+            _LOGGER.warning("Write operation failed (%s): %s", operation, err)
+            raise HomeAssistantError(
+                f"Operation failed: {operation}. Unexpected error: {err}"
+            ) from None

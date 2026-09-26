@@ -11,6 +11,11 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ## Changelog
 
+### v0.2.13
+
+- Increased the Remocon API HTTP timeout from 15 seconds to 30 seconds to reduce transient read timeouts during slower cloud responses.
+- Wrapped write operations with clearer Home Assistant error messages that include the attempted action, reducing noisy deep stack traces for failed writes.
+
 ### v0.2.12
 
 - Renamed DHW write strategy values to `data_item` and `bsb_plantdata` and removed the automatic fallback behavior so the configured route is used strictly.
@@ -286,6 +291,18 @@ $env:REMO_ITEM_VALUE="28.0"
 $env:REMO_ITEM_ZONE="0"
 python standalone_api_live_test.py
 ```
+
+Optional explicit DHW data-item write test (`DhwTemp` and `DhwTimeProgComfortTemp` separately):
+
+```powershell
+$env:REMO_RUN_WRITE="1"
+$env:REMO_RUN_DHW_ITEM_WRITE="1"
+$env:REMO_DHW_SET_TEMP_ITEM_VALUE="48"
+$env:REMO_DHW_COMFORT_ITEM_VALUE="52"
+python standalone_api_live_test.py
+```
+
+This is useful to compare the two direct data-item paths explicitly. It bypasses `set_dhw_temperature` and writes the two item IDs separately via `set_data_item`.
 
 Optional DHW comfort/reduced write test (`set_dhw_temperature` with the configured strategy):
 

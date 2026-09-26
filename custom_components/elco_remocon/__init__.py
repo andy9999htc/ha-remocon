@@ -95,9 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _async_handle_set_dhw_mode(call) -> None:
             coordinator = _get_coordinator(hass, call.data.get(ATTR_ENTRY_ID))
-            await hass.async_add_executor_job(
+            mode = call.data[ATTR_MODE]
+            await coordinator.async_execute_write_operation(
+                f"set dhw mode to {mode}",
                 coordinator.client.set_dhw_mode,
-                call.data[ATTR_MODE],
+                mode,
             )
             await coordinator.async_request_refresh()
 
@@ -108,7 +110,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise HomeAssistantError("At least one of comfort/reduced must be provided")
 
             coordinator = _get_coordinator(hass, call.data.get(ATTR_ENTRY_ID))
-            await hass.async_add_executor_job(
+            if comfort is not None and reduced is not None:
+                operation = f"set dhw temp to comfort={comfort:g} C and reduced={reduced:g} C"
+            elif comfort is not None:
+                operation = f"set dhw temp to comfort={comfort:g} C"
+            else:
+                operation = f"set dhw temp to reduced={reduced:g} C"
+
+            await coordinator.async_execute_write_operation(
+                operation,
                 coordinator.client.set_dhw_temperature,
                 comfort,
                 reduced,
@@ -117,11 +127,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _async_handle_set_data_item(call) -> None:
             coordinator = _get_coordinator(hass, call.data.get(ATTR_ENTRY_ID))
-            await hass.async_add_executor_job(
+            item_id = call.data[ATTR_ITEM_ID]
+            value = call.data[ATTR_VALUE]
+            zone = call.data[ATTR_ZONE]
+            await coordinator.async_execute_write_operation(
+                f"set data item {item_id} (zone={zone}) to {value}",
                 coordinator.client.set_data_item,
-                call.data[ATTR_ITEM_ID],
-                call.data[ATTR_VALUE],
-                call.data[ATTR_ZONE],
+                item_id,
+                value,
+                zone,
             )
             await coordinator.async_request_refresh()
 
