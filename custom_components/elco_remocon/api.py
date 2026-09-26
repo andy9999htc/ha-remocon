@@ -31,6 +31,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 BASE_URL = "https://www.remocon-net.remotethermo.com"
+REQUEST_TIMEOUT_SECONDS = 30
 
 DEFAULT_FEATURES_PAYLOAD = {
     "zones": [{"num": 1, "name": "", "roomSens": False, "geofenceDeroga": False,
@@ -231,7 +232,7 @@ class RemoconClient:
             "Cookie": "browserUtcOffset=-120",
         }
         try:
-            resp = s.request("POST", url, headers=headers, data=payload, timeout=15)
+            resp = s.request("POST", url, headers=headers, data=payload, timeout=REQUEST_TIMEOUT_SECONDS)
         except requests.RequestException as err:
             raise RemoconConnectionError(str(err)) from err
 
@@ -257,7 +258,7 @@ class RemoconClient:
     def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         s = self._get_session()
         url = f"{BASE_URL}{path}"
-        kwargs.setdefault("timeout", 15)
+        kwargs.setdefault("timeout", REQUEST_TIMEOUT_SECONDS)
         try:
             resp = s.request(method, url, **kwargs)
             if resp.status_code in (401, 403):

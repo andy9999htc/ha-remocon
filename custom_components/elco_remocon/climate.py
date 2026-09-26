@@ -138,7 +138,8 @@ class ElcoClimateEntity(CoordinatorEntity, ClimateEntity):
         temperature = kwargs.get("temperature")
         if temperature is None:
             return
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set zone comfort temp to {float(temperature):g} C",
             self.coordinator.client.set_zone_temperatures, temperature, None
         )
         await self.coordinator.async_request_refresh()
@@ -153,7 +154,8 @@ class ElcoClimateEntity(CoordinatorEntity, ClimateEntity):
         mode = mode_map.get(hvac_mode)
         if mode is None:
             return
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set zone hvac mode to {hvac_mode}",
             self.coordinator.client.set_zone_mode, mode
         )
         await self.coordinator.async_request_refresh()
@@ -167,7 +169,8 @@ class ElcoClimateEntity(CoordinatorEntity, ClimateEntity):
         mode = mode_map.get(preset_mode)
         if mode is None:
             return
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set zone preset mode to {preset_mode}",
             self.coordinator.client.set_zone_mode, mode
         )
         await self.coordinator.async_request_refresh()

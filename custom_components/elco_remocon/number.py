@@ -66,7 +66,8 @@ class ElcoDhwSetTemperatureNumber(_BaseDhwTemperatureNumber):
         return None
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set dhw temp auf {float(value):g} C",
             self.coordinator.client.set_dhw_set_temp,
             float(value),
         )
@@ -89,7 +90,8 @@ class ElcoDhwComfortTemperatureNumber(_BaseDhwTemperatureNumber):
         return value if value > 0 else None
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set dhw comfort temp auf {float(value):g} C",
             self.coordinator.client.set_dhw_temperature,
             float(value),
             None,
@@ -113,7 +115,8 @@ class ElcoDhwReducedTemperatureNumber(_BaseDhwTemperatureNumber):
         return value if value > 0 else None
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set dhw reduced temp auf {float(value):g} C",
             self.coordinator.client.set_dhw_temperature,
             None,
             float(value),

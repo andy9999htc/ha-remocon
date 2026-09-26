@@ -16,6 +16,13 @@ Optional write test (set_data_item):
     $env:REMO_ITEM_ZONE="0"
     python standalone_api_live_test.py
 
+Optional explicit DHW data-item write test (writes both DhwTemp and DhwTimeProgComfortTemp):
+    $env:REMO_RUN_WRITE="1"
+    $env:REMO_RUN_DHW_ITEM_WRITE="1"
+    $env:REMO_DHW_SET_TEMP_ITEM_VALUE="48"
+    $env:REMO_DHW_COMFORT_ITEM_VALUE="52"
+    python standalone_api_live_test.py
+
 Optional DHW comfort/reduced write test (uses set_dhw_temperature with the configured strategy):
     $env:REMO_RUN_WRITE="1"
     $env:REMO_RUN_DHW_WRITE="1"
@@ -197,6 +204,13 @@ def _optional_float_env(name: str) -> float | None:
     raw = os.getenv(name)
     if raw is None or raw.strip() == "":
         return None
+    return float(raw)
+
+
+def _optional_float_env_with_default(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
     return float(raw)
 
 
@@ -513,6 +527,43 @@ def main() -> int:
             )
         else:
             print("  - set_data_item write test skipped (set REMO_RUN_DATA_ITEM_WRITE=1 to enable)")
+
+    run_dhw_item_write_requested = os.getenv("REMO_RUN_DHW_ITEM_WRITE", "0") == "1"
+    run_dhw_item_write = run_write and run_dhw_item_write_requested
+    if run_dhw_item_write:
+        dhw_set_temp_value = _optional_float_env_with_default("REMO_DHW_SET_TEMP_ITEM_VALUE", 48.0)
+        dhw_comfort_item_value = _optional_float_env_with_default("REMO_DHW_COMFORT_ITEM_VALUE", 52.0)
+
+        print(
+            "  - explicit DHW data-item write test enabled "
+            f"(DhwTemp={dhw_set_temp_value}, DhwTimeProgComfortTemp={dhw_comfort_item_value})"
+        )
+        client.set_data_item("DhwTemp", dhw_set_temp_value, zone=0)
+        print(f"    [OK] set_data_item succeeded for item=DhwTemp, value={dhw_set_temp_value}, zone=0")
+        client.set_data_item("DhwTimeProgComfortTemp", dhw_comfort_item_value, zone=0)
+        print(
+            "    [OK] set_data_item succeeded for "
+            f"item=DhwTimeProgComfortTemp, value={dhw_comfort_item_value}, zone=0"
+        )
+
+        refreshed = client.get_data()
+        print(
+            "    [INFO] post-item-write get_data: "
+            f"dhw_set_temp={refreshed.dhw_set_temp}, "
+            f"dhw_comfort_temp={refreshed.dhw_comfort_temp}, "
+            f"dhw_reduced_temp={refreshed.dhw_reduced_temp}"
+        )
+    else:
+        if run_dhw_item_write_requested and not run_write:
+            print(
+                "  - explicit DHW data-item write test skipped "
+                "(set REMO_RUN_WRITE=1 and REMO_RUN_DHW_ITEM_WRITE=1 to enable)"
+            )
+        else:
+            print(
+                "  - explicit DHW data-item write test skipped "
+                "(set REMO_RUN_DHW_ITEM_WRITE=1 to enable)"
+            )
 
     run_dhw_write_requested = os.getenv("REMO_RUN_DHW_WRITE", "0") == "1"
     run_dhw_write = run_write and run_dhw_write_requested

@@ -61,7 +61,8 @@ class ElcoPlantModeSelect(CoordinatorEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         if option not in PLANT_MODE_OPTIONS:
             return
-        await self.hass.async_add_executor_job(
+        await self.coordinator.async_execute_write_operation(
+            f"set plant mode to {option}",
             self.coordinator.client.set_plant_mode,
             PLANT_MODE_OPTIONS[option],
         )
