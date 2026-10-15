@@ -30,6 +30,12 @@ Optional DHW comfort/reduced write test (uses set_dhw_temperature with the confi
     $env:REMO_DHW_REDUCED="45"
     python standalone_api_live_test.py
 
+Optional DHW mode write test (uses set_dhw_mode with the configured strategy):
+    $env:REMO_RUN_WRITE="1"
+    $env:REMO_RUN_DHW_MODE_WRITE="1"
+    $env:REMO_DHW_MODE="1"
+    python standalone_api_live_test.py
+
 Optional DHW write strategy override:
     $env:REMO_DHW_WRITE_STRATEGY="data_item"
     # or: bsb_plantdata
@@ -273,6 +279,43 @@ def _run_set_dhw_temperature_with_optional_forced_fallback(
         client.set_dhw_temperature(comfort=comfort, reduced=reduced)
     finally:
         setattr(client, primary_method_name, original_primary)
+
+
+def _run_set_dhw_mode_with_optional_forced_failure(client: Any, mode: int) -> None:
+    """Exercise the configured DHW mode path and optionally force it to fail."""
+    if not _force_dhw_primary_failure_enabled():
+        client.set_dhw_mode(mode)
+        return
+
+    if getattr(client, "_dhw_write_strategy", "data_item") == "data_item":
+        original_set_data_item = client.set_data_item
+
+        def _forced_failure(item_id: str, value: Any, zone: int = 0) -> None:
+            raise RemoconConnectionError(
+                "Forced primary failure for standalone DHW mode test via data items"
+            )
+
+        print("    [INFO] Forcing primary DHW mode write failure to validate strict no-fallback behavior")
+        client.set_data_item = _forced_failure
+        try:
+            client.set_dhw_mode(mode)
+        finally:
+            client.set_data_item = original_set_data_item
+        return
+
+    original_request = client._request
+
+    def _forced_failure(method: str, path: str, **kwargs: Any) -> Any:
+        raise RemoconConnectionError(
+            "Forced primary failure for standalone DHW mode test via bsbPlantData"
+        )
+
+    print("    [INFO] Forcing primary DHW mode write failure to validate strict no-fallback behavior")
+    client._request = _forced_failure
+    try:
+        client.set_dhw_mode(mode)
+    finally:
+        client._request = original_request
 
 
 def _has_expected_raw_data(raw: Any) -> bool:
@@ -599,6 +642,28 @@ def main() -> int:
             )
         else:
             print("  - set_dhw_temperature write test skipped (set REMO_RUN_DHW_WRITE=1 to enable)")
+
+    run_dhw_mode_write_requested = os.getenv("REMO_RUN_DHW_MODE_WRITE", "0") == "1"
+    run_dhw_mode_write = run_write and run_dhw_mode_write_requested
+    if run_dhw_mode_write:
+        mode = int(os.getenv("REMO_DHW_MODE", "1"))
+        print(
+            "  - set_dhw_mode write test enabled "
+            f"(mode={mode}, strategy={dhw_write_strategy})"
+        )
+        _run_set_dhw_mode_with_optional_forced_failure(client, mode)
+        print("    [OK] set_dhw_mode call succeeded")
+
+        refreshed = client.get_data()
+        print(f"    [INFO] post-write get_data: dhw_mode={refreshed.dhw_mode}")
+    else:
+        if run_dhw_mode_write_requested and not run_write:
+            print(
+                "  - set_dhw_mode write test skipped "
+                "(set REMO_RUN_WRITE=1 and REMO_RUN_DHW_MODE_WRITE=1 to enable)"
+            )
+        else:
+            print("  - set_dhw_mode write test skipped (set REMO_RUN_DHW_MODE_WRITE=1 to enable)")
 
     print("\nAll requested live checks completed.")
     return 0

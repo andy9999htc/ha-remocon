@@ -11,6 +11,11 @@ Control and monitor your Elco heat pump (e.g. Aerotop SPK) through the Remocon-N
 
 ## Changelog
 
+### v0.2.14
+
+- Fixed DHW mode writes to honor the configured DHW write strategy: `data_item` now writes `DhwMode` via the v2 data item API instead of always using the legacy `bsbPlantData/dhwMode` route.
+- Added regression coverage for the DHW mode write strategy and extended the standalone live test script to validate `set_dhw_mode` with the configured route.
+
 ### v0.2.13
 
 - Increased the Remocon API HTTP timeout from 15 seconds to 30 seconds to reduce transient read timeouts during slower cloud responses.

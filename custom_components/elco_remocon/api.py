@@ -666,9 +666,17 @@ class RemoconClient:
         raise RemoconDataError(f"Unsupported DHW write strategy: {self._dhw_write_strategy}")
 
     def set_dhw_mode(self, mode: int) -> None:
-        """Set DHW mode."""
-        path = f"/api/v2/remote/bsbPlantData/{self._gateway_id}/dhwMode"
-        self._request("POST", path, json={"new": mode})
+        """Set DHW mode using the configured write strategy only."""
+        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_DATA_ITEM:
+            self.set_data_item("DhwMode", int(mode), zone=0)
+            return
+
+        if self._dhw_write_strategy == DHW_WRITE_STRATEGY_BSB_PLANTDATA:
+            path = f"/api/v2/remote/bsbPlantData/{self._gateway_id}/dhwMode"
+            self._request("POST", path, json={"new": mode})
+            return
+
+        raise RemoconDataError(f"Unsupported DHW write strategy: {self._dhw_write_strategy}")
 
     def set_data_item(self, item_id: str, value: Any, zone: int = 0) -> None:
         """Set a generic v2 data item value."""

@@ -465,9 +465,21 @@ def test_set_dhw_temperature_data_item_prefers_data_items(client_data_item):
     mock_set_data_item.assert_any_call("DhwTimeProgEconomyTemp", 41.0, zone=0)
 
 
+def test_set_dhw_mode_respects_data_item_strategy(client):
+    """Configured data_item writes should be used for DHW mode too."""
+    client._dhw_write_strategy = DHW_WRITE_STRATEGY_DATA_ITEM
+
+    with patch.object(client, "set_data_item") as mock_set_data_item, patch.object(client, "_request") as mock_request:
+        client.set_dhw_mode(1)
+
+    mock_request.assert_not_called()
+    mock_set_data_item.assert_called_once_with("DhwMode", 1, zone=0)
+
+
 @patch("custom_components.elco_remocon.api.requests.Session")
 def test_set_dhw_mode(mock_session_class, client, mock_response_base):
-    """Test setting DHW mode."""
+    """Test setting DHW mode via the configured bsbPlantData path."""
+    client._dhw_write_strategy = DHW_WRITE_STRATEGY_BSB_PLANTDATA
     mock_session = MagicMock()
     mock_session_class.return_value = mock_session
 
